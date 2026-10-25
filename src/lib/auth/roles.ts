@@ -15,7 +15,6 @@ export type Role = (typeof roles)[number];
 export const permissions = [
   "help.read",
   "help.raise",
-  "help.resolve",
   "employees.manage",
   "permissions.manage",
   "settings.manage",
@@ -69,7 +68,6 @@ export const defaults: Record<Role, readonly Permission[]> = {
   ],
   "Post-Sales Coordinator": [
     "help.read",
-    "help.resolve",
     "orders.read",
     "orders.manage",
     "service.manage",
@@ -82,7 +80,6 @@ export const defaults: Record<Role, readonly Permission[]> = {
   "Installation Team": ["orders.read", "installations.manage", "documents.read", "documents.write"],
   "Service Engineer": [
     "help.read",
-    "help.resolve",
     "orders.read",
     "audits.manage",
     "service.manage",

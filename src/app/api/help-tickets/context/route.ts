@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 export async function GET(r: Request) {
   return apiResponse(() => {
     const q = Object.fromEntries(new URL(r.url).searchParams);
+    if (q.mode === "intake") return getHelpService().intake(r.headers, q.organizationId ?? "");
     return q.id ? getHelpService().context(r.headers, q) : getHelpService().sources(r.headers, q);
   });
 }

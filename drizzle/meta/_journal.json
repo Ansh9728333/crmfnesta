@@ -169,6 +169,20 @@
       "when": 1792914720832,
       "tag": "0023_help-ticket-security",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792917031134,
+      "tag": "0024_help-intake-fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792917080248,
+      "tag": "0025_help-intake-security",
+      "breakpoints": true
     }
   ]
 }

@@ -380,3 +380,11 @@ database credentials. No sample customer data or invented business totals.
   concurrency, duplicate-request prevention and immutable history.
 - Admin configures active concern types, mandatory evidence and SLA hours; existing
   tickets retain their snapshots. See HELP_TICKETS.md for access and rollout.
+
+Help intake refinement: show every form question immediately, allow a selected or
+typed location, and automatically list all company clients across employee owners.
+Support client name/mobile search, pagination and optional lead/project linkage.
+List all active company employees as resolvers. Their named assignment grants only
+that ticket's participation, never general customer/lead/financial access. Preserve
+the real session submitter and independent closure confirmation. Keep other-company
+records private. No location entry creates a branch or changes authorization scope.

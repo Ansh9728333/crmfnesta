@@ -504,3 +504,29 @@ checks also pass. No production customer/employee/ticket test fixtures were crea
 or changed. Remaining operator work: customer-specific live business acceptance,
 abandoned-upload cleanup policy, optional malware scanning, and the previously
 documented backup/recovery/performance operations. See docs/DEPLOYMENT_STATUS.md.
+
+## Phase 12 — Visible Help intake questions and shared company directories
+
+User requested every original form question immediately, a typable location, all
+employees' clients in the picker, and every active employee as a possible resolver.
+Implemented dedicated company-scoped minimal client lookup (name/mobile), automatic
+initial pages, search/pagination, client-only intake, optional project/lead linkage,
+typed location snapshots and all active company employee choices. Real submitter
+identity remains session-derived and immutable. Named assignment provides only that
+ticket's read/resolve authority; general CRM permissions stay independent. The old
+global help.resolve toggle is retired, without broad role grants or rewriting old
+audit/migration artifacts. Additive migrations 0024/0025 preserve old tickets.
+
+Acceptance: questions visible before client selection; colleagues' clients listed;
+mobile/name search and company isolation; no inherited full-lead access; no-project
+client submission; custom location survives reload; active Accounts/sales employees
+can resolve their assigned tickets only; creator confirms independently; inactive
+accounts lose access; all quality/browser checks and approved live rollout.
+
+Phase 12 validation: lint, TypeScript, 49 unit tests, 68 isolated database tests,
+10 public browser checks, 18 authenticated desktop/mobile checks and production
+build pass. A focused 14-case Help database run also verifies private proof uploads
+by assigned Accounts staff and previous-version inserts during rolling deployment.
+Screenshots reviewed. Live migrations 0024/0025 applied; all 26 hashes match, all
+57 tables retain RLS/browser denial and both private Storage guards are present.
+Source publication and application rollout follow; no production fixtures used.

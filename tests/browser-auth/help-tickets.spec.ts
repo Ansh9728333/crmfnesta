@@ -12,13 +12,36 @@ test("raises, resolves, reopens and independently confirms customer help with pe
   await page.getByLabel("Password", { exact: true }).fill(browserHelp.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL("http://127.0.0.1:3100/");
+  await page.goto("/help-tickets");
+  await page.getByRole("button", { name: "Raise Help Ticket", exact: true }).click();
+  const initialForm = page.getByRole("dialog");
+  await expect(
+    initialForm.getByRole("combobox", { name: "Concern Type *", exact: true }),
+  ).toBeVisible();
+  await expect(
+    initialForm.getByRole("combobox", {
+      name: "Select The Name To whom you want to raise the ticket *",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    initialForm
+      .getByRole("combobox", { name: "Client Name *", exact: true })
+      .locator("option")
+      .filter({ hasText: "Browser Shared Client" }),
+  ).toHaveCount(1);
+  await initialForm.getByRole("button", { name: "Close", exact: true }).click();
   await page.goto("/projects");
   const project = page.getByRole("row").filter({ hasText: "Browser Help Project" });
   await project.getByRole("link", { name: "Raise Help Ticket" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("heading", { name: "Raise Help Ticket" })).toBeVisible();
-  await expect(dialog.getByLabel("Your Name / Raised By")).toHaveValue("Browser Help creator");
+  await expect(dialog.getByLabel("Your Name ? *")).toHaveValue("Browser Help creator");
+  await dialog.screenshot({ path: `test-results/help-intake-form-${info.project.name}.png` });
   await expect(dialog.getByText("Browser Help Customer", { exact: true })).toBeVisible();
+  await dialog
+    .getByRole("combobox", { name: "Your Location ? *", exact: true })
+    .fill(`Custom help location ${info.project.name}`);
   await dialog
     .getByRole("combobox", { name: "Concern Type *", exact: true })
     .selectOption("service");
@@ -31,10 +54,13 @@ test("raises, resolves, reopens and independently confirms customer help with pe
       exact: true,
     })
     .selectOption({ label: "Browser Help resolver" });
-  await dialog.getByRole("button", { name: "Generate Help Ticket", exact: true }).click();
+  await dialog.getByRole("button", { name: "Submit Help Ticket", exact: true }).click();
   await expect(page).toHaveURL(/\/help-tickets\/[\w-]+$/);
   const url = page.url();
   await page.reload();
+  await expect(
+    page.getByText(new RegExp(`Custom help location ${info.project.name}`)),
+  ).toBeVisible();
   await expect(page.getByText(issue, { exact: true }).first()).toBeVisible();
   const resolverContext = await browser.newContext({
       baseURL: "http://127.0.0.1:3100",

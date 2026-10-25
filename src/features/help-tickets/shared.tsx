@@ -13,7 +13,10 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export const textareaClass = "min-h-28 w-full rounded-md border bg-background p-3 text-sm";
 export async function uploadHelpFile(
   file: File,
-  destination: { source?: { kind: "lead" | "project"; id: string }; ticketId?: string },
+  destination: {
+    source?: { kind: "lead" | "project" | "customer"; id: string };
+    ticketId?: string;
+  },
 ) {
   if (
     !["image/png", "image/jpeg", "application/pdf"].includes(file.type) ||

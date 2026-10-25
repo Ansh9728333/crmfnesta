@@ -140,6 +140,22 @@ async function main() {
       siteAddress: "Disposable help ticket browser test site",
     }),
   );
+  const [helpAdmin] = await db
+    .select({ id: schema.user.id })
+    .from(schema.user)
+    .where((await import("drizzle-orm")).eq(schema.user.email, browserAdmin.email));
+  await leadService(db, settings).create(
+    seedHeaders,
+    leadFormSchema.parse({
+      organizationId: helpCentre.organizationId,
+      centreId: helpCentre.id,
+      assignedTo: helpAdmin.id,
+      clientName: "Browser Shared Client",
+      mobile: "9876500096",
+      projectName: "Shared client project",
+      siteAddress: "Isolated cross-employee help lookup site",
+    }),
+  );
   await client.end();
   const app = spawn(
     process.execPath,

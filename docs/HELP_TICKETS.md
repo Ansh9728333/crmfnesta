@@ -1,8 +1,8 @@
 # Help Tickets
 
 Workspace → **Help Tickets**, above Projects. Raise from a lead/project row or
-search an existing client/project in the dialog. Client, company and location are
-derived from authorized records; Raised By is the logged-in employee, never a
+search an existing client/project in the dialog. Client and company come from
+existing records. Location can be selected or typed. Raised By is the logged-in employee, never a
 spoofable selection. Finesta Home, IBAX and S-Grip share one implementation.
 General help works before Won conversion and after handover. Existing aftercare
 Service Tickets retain their handover gates and independent workflow.
@@ -21,7 +21,11 @@ The resolver cannot confirm their own solution, including an Admin. Self-assigne
 tickets need a separate Admin. A separate scoped Admin may confirm other tickets
 when needed. Ticket actions never advance sales/production/handover stages.
 
-Required: source lead/project, concern type, brief details, priority, active resolver.
+All questions are visible immediately. Required: existing client, location, concern
+type, brief details, priority, active resolver. A lead/project is optional when the
+client has no project yet. Client names/mobile numbers load automatically, across
+all employees in the selected authorized company, with server-side search and
+20-client pages. Related leads/projects remain linked when explicitly selected.
 Defaults: Quotation, Site Visit, Payment, Production, Delivery, Installation,
 Service, Other. Admin can add/edit/soft-disable types, require supporting evidence
 and configure an SLA in hours. Original concern, requirement and due date are
@@ -31,15 +35,20 @@ optional unless required by the selected concern. Resolution proof is optional.
 ## Access and queries
 
 - Company-scoped Admin/Super Admin manages tickets and settings. Normal users see
-  their own raised/assigned tickets in currently assigned active branches.
+  their own raised/assigned tickets in their currently assigned active companies.
 - Sales Manager/CSE/Sales Executive initially get `help.read` + `help.raise`.
-- Service Engineer/Post-Sales Coordinator get `help.read` + `help.resolve`.
-- Other roles get no automatic Help permissions. Admin can grant the three
-  permissions through existing Roles and permissions settings.
-- Intake also requires existing lead/project access. Post-sales project access can
-  follow an authorized order. Resolver selection requires active account/profile,
-  exact company/location, read and resolve access. Ticket access grants no general
-  lead, project, order or financial access; full-record links remain scoped.
+- Intake requires `help.read` and `help.raise` in the selected company. Its dedicated
+  contact lookup includes all employees' clients, independent of lead ownership.
+  It exposes only client name/mobile and lead/project context, never financial data.
+- Resolver dropdown includes every active employee of that company, across roles
+  and locations. A named assignment grants access/actions only on that ticket.
+  All active users can open Help Tickets to see assigned work. They cannot browse
+  the client directory or other tickets without separate intake/read authority.
+- The old module-wide `help.resolve` toggle is retired from configurable permissions;
+  historical grant rows remain inert. No broad permissions are automatically granted
+  to Accounts or other roles. Deactivation, loss of company membership, or Admin
+  reassignment removes the corresponding access. Full lead/project/order/financial
+  permissions remain independent; full-record links remain scoped.
 - Mutations reauthorize after the shared transaction advisory lock. Optimistic
   versions reject stale updates; request UUIDs prevent duplicate creation. RLS,
   revoked browser grants, composite company FKs and SQL state/evidence guards apply.
@@ -69,6 +78,11 @@ Apply reviewed migrations 0022/0023 through `npm run db:migrate`; run
 `npx tsx --conditions=react-server scripts/configure-help-storage.ts` using authorized
 server configuration. Bucket limits and restrictive default-deny Storage policies
 apply. CSP allows direct uploads only to the configured project's Storage path.
+
+Intake refinement migrations 0024/0025 allow customer-only tickets and persist a
+typed, immutable location snapshot. Typed location never creates a branch or grants
+access. Older ticket locations fall back to their original linked branch. The
+actual submitter is always retained; another employee cannot be impersonated.
 
 No Google Forms/account integration or automatic email/SMS/WhatsApp sending is
 claimed. [Official signed upload documentation](https://supabase.com/docs/reference/javascript/storage-from-createsigneduploadurl)

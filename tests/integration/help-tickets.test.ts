@@ -40,6 +40,8 @@ const store: HelpStore = {
 const service = helpService(db, settings, store),
   notifications = notificationService(db, settings);
 let admin: Headers,
+  accounts: Headers,
+  accountsId: string,
   independentAdmin: Headers,
   creator: Headers,
   resolver: Headers,
@@ -111,6 +113,7 @@ beforeAll(async () => {
     ["second", "Service Engineer", centre],
     ["branch", "Service Engineer", branch.id],
     ["independent", "Admin", centre],
+    ["accounts", "Accounts", centre],
   ] as const) {
     const p = await employees.create(admin, {
       name: `Help ${key}`,
@@ -123,6 +126,10 @@ beforeAll(async () => {
       assignments: [{ organizationId: org, centreId: location, role }],
     });
     const h = await login(`help.${key}`);
+    if (key === "accounts") {
+      accounts = h;
+      accountsId = p.id;
+    }
     if (key === "independent") independentAdmin = h;
     if (key === "creator") {
       creator = h;
@@ -202,9 +209,9 @@ describe("persisted customer help workflow", () => {
     await expect(
       change(resolver, ticketId, "reassign", "New owner", { assignedTo: secondId }),
     ).rejects.toMatchObject({ status: 403 });
-    await expect(service.create(creator, { ...input(), assignedTo: peerId })).rejects.toMatchObject(
-      { status: 400 },
-    );
+    await expect(
+      service.create(creator, { ...input(), assignedTo: "unknown-employee" }),
+    ).rejects.toMatchObject({ status: 400 });
   });
   it("returns a resolution to the creator and retains every rejected attempt", async () => {
     await change(resolver, ticketId, "start");
@@ -249,7 +256,10 @@ describe("persisted customer help workflow", () => {
     await expect(
       service.change(resolver, first.id, { action: "resolve", version: 1, notes: "Stale request" }),
     ).rejects.toMatchObject({ status: 409 });
-    await expect(service.create(peer, input())).rejects.toMatchObject({ status: 404 });
+    expect((await service.context(peer, { kind: "lead", id: leadId })).source.client).toBe(
+      "Help customer",
+    );
+    await expect(leads.detail(peer, leadId)).rejects.toMatchObject({ status: 404 });
     const otherOrg = (await db.select().from(schema.organizations)).find((o) => o.id !== org)!;
     await expect(
       service.savePolicy(creator, {
@@ -298,6 +308,85 @@ describe("persisted customer help workflow", () => {
       "Independent administrator confirmed customer acceptance",
     );
     expect((await service.detail(admin, t.id)).ticket.status).toBe("closed");
+  });
+  it("lists every employee's clients for Help only, including normalized mobile search", async () => {
+    const current = (await leads.detail(creator, leadId)).lead;
+    expect((await service.directory(peer)).clients.some((x) => x.id === current.customerId)).toBe(
+      true,
+    );
+    expect(
+      (
+        await service.sources(peer, { kind: "customer", organizationId: org, q: "+91 98765 99991" })
+      ).some((x) => x.id === current.customerId),
+    ).toBe(true);
+    await expect(leads.detail(peer, leadId)).rejects.toMatchObject({ status: 404 });
+    const intake = await service.intake(creator, org);
+    expect(intake.employees.map((x) => x.id)).toContain(peerId);
+    expect(intake.employees.map((x) => x.id)).toContain(accountsId);
+    expect(await service.sources(peer, { kind: "customer", q: "%_" })).toHaveLength(0);
+  });
+  it("persists typed location and customer-only tickets; any named active employee can resolve only their assigned ticket", async () => {
+    const [c] = await db
+      .insert(schema.customers)
+      .values({
+        organizationId: org,
+        name: "Shared client without project",
+        mobile: "+919876511110",
+        centreId: null,
+      })
+      .returning();
+    const ctx = await service.context(creator, { kind: "customer", id: c.id });
+    expect(ctx.related).toHaveLength(0);
+    const t = await service.create(creator, {
+      ...input(),
+      kind: "customer",
+      id: c.id,
+      assignedTo: accountsId,
+      location: "New Delhi - customer service desk",
+    });
+    expect(t.leadId).toBeNull();
+    expect(t.projectId).toBeNull();
+    expect((await service.detail(accounts, t.id)).info.location).toBe(
+      "New Delhi - customer service desk",
+    );
+    expect((await service.list(accounts, {})).total).toBe(1);
+    const [legacy] = await db
+      .insert(schema.helpTickets)
+      .values({
+        ...t,
+        id: randomUUID(),
+        number: `HT-LEGACY-${randomUUID()}`,
+        requestId: randomUUID(),
+        assignedTo: peerId,
+        location: null,
+      })
+      .returning();
+    expect(legacy.location).toBe(ctx.source.location);
+    await expect(service.detail(accounts, ticketId)).rejects.toMatchObject({ status: 404 });
+    expect(await service.sources(accounts, {})).toHaveLength(0);
+    expect((await notifications.list(accounts)).rows.some((x) => x.entity_id === t.id)).toBe(true);
+    const proof = await service.prepareFile(accounts, {
+      ticketId: t.id,
+      name: "resolution.png",
+      contentType: "image/png",
+      size: 8,
+    });
+    await service.finalizeFile(accounts, proof.id);
+    await change(
+      accounts,
+      t.id,
+      "resolve",
+      "Accounts employee resolved the assigned customer query",
+      { fileId: proof.id },
+    );
+    await change(creator, t.id, "close", "Customer confirms resolution");
+    await expect(
+      db.execute(
+        sql`update help_tickets set location='changed',version=version+1 where id=${t.id}::uuid`,
+      ),
+    ).rejects.toThrow();
+    await expect(service.create(creator, { ...input(), location: " " })).rejects.toThrow();
+    await expect(service.create(creator, { ...input(), createdBy: peerId })).rejects.toThrow();
   });
   it("uses one general help implementation for all three canonical companies", async () => {
     const orgs = await db.select().from(schema.organizations),
@@ -398,11 +487,16 @@ describe("persisted customer help workflow", () => {
   });
   it("enforces revoked current permissions, SQL evidence guards and immutable history", async () => {
     // Later source relinking must not invalidate the ticket's original context/history.
-    await db.update(schema.leads).set({projectId:null}).where(eq(schema.leads.id,leadId));
-    await change(creator,ticketId,"reopen","Customer requested another check after project relinking");
-    await change(secondResolver,ticketId,"resolve","Completed the original site concern");
-    expect((await service.detail(creator,ticketId)).ticket.projectId).toBe(projectId);
-    await db.update(schema.leads).set({projectId}).where(eq(schema.leads.id,leadId));
+    await db.update(schema.leads).set({ projectId: null }).where(eq(schema.leads.id, leadId));
+    await change(
+      creator,
+      ticketId,
+      "reopen",
+      "Customer requested another check after project relinking",
+    );
+    await change(secondResolver, ticketId, "resolve", "Completed the original site concern");
+    expect((await service.detail(creator, ticketId)).ticket.projectId).toBe(projectId);
+    await db.update(schema.leads).set({ projectId }).where(eq(schema.leads.id, leadId));
     await expect(db.execute(sql`update help_ticket_events set notes='tampered'`)).rejects.toThrow();
     await expect(
       db.execute(
@@ -418,10 +512,14 @@ describe("persisted customer help workflow", () => {
           eq(schema.rolePermissions.permission, "help.read"),
         ),
       );
-    expect((await service.list(resolver, {})).total).toBe(0);
-    expect(
-      (await notifications.list(resolver)).rows.filter((x) => x.kind === "help_ticket"),
-    ).toHaveLength(0);
-    await expect(service.detail(resolver, ticketId)).rejects.toMatchObject({ status: 404 });
+    // Named-ticket access is independent of broad role grants, but never survives
+    // employee deactivation or loss of the company assignment.
+    await db
+      .update(schema.employeeProfiles)
+      .set({ active: false })
+      .where(eq(schema.employeeProfiles.userId, resolverId));
+    await expect(service.list(resolver, {})).rejects.toMatchObject({ status: 403 });
+    await expect(notifications.list(resolver)).rejects.toMatchObject({ status: 403 });
+    await expect(service.detail(resolver, ticketId)).rejects.toMatchObject({ status: 403 });
   });
 });

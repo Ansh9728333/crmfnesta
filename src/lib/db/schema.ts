@@ -1252,6 +1252,7 @@ export const helpTickets = pgTable(
   {
     ...scope(),
     number: text("number").notNull().unique(),
+    location: text("location"),
     centreId: uuid("centre_id").notNull(),
     customerId: uuid("customer_id").notNull(),
     leadId: uuid("lead_id"),
@@ -1296,7 +1297,7 @@ export const helpTickets = pgTable(
     index().on(t.organizationId, t.centreId, t.status, t.createdAt),
     index().on(t.assignedTo, t.status, t.dueAt),
     index().on(t.createdBy, t.status),
-    check("help_source_required", sql`${t.leadId} is not null or ${t.projectId} is not null`),
+    check("help_source_required", sql`${t.customerId} is not null`),
     check(
       "help_status",
       sql`${t.status} in ('raised','in_progress','awaiting_confirmation','reopened','closed')`,

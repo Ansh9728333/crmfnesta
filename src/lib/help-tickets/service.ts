@@ -39,7 +39,7 @@ export interface HelpStore {
   sign(path: string): Promise<string>;
 }
 export type HelpSource = {
-  kind: "lead" | "project";
+  kind: "lead" | "project" | "customer";
   id: string;
   organizationId: string;
   centreId: string;
@@ -50,21 +50,21 @@ export type HelpSource = {
   name: string;
   company: string;
   location: string;
+  mobile: string | null;
 };
 export function helpService(db: Database, settings: AuthSettings, store?: HelpStore) {
   const access = (h: Headers, t = db) => resolveAccess(t, buildAuth(t, settings), h);
   function fail(status: number, message: string): never {
     throw new AccessError(status, message);
   }
-  function allowed(
-    a: Access,
-    org: string,
-    centre: string,
-    permission: "help.read" | "help.raise" | "help.resolve",
-  ) {
-    return eligibleAssignments(a, permission).some(
-      (x) =>
-        x.organizationId === org && (adminOrganizations(a).includes(org) || x.centreId === centre),
+  function allowed(a: Access, org: string, centre: string, permission: "help.read" | "help.raise") {
+    void centre;
+    return eligibleAssignments(a, permission).some((x) => x.organizationId === org);
+  }
+  function isResolver(a: Access, ticket: typeof helpTickets.$inferSelect) {
+    return (
+      ticket.assignedTo === a.user.id &&
+      a.assignments.some((x) => x.organizationId === ticket.organizationId)
     );
   }
   async function transaction<T>(h: Headers, fn: (t: Database, a: Access) => Promise<T>) {
@@ -87,42 +87,44 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
     const f = z
       .object({
         q: z.string().trim().max(100).default(""),
-        kind: z.enum(["lead", "project"]).optional(),
+        kind: z.enum(["lead", "project", "customer"]).optional(),
         id: z.uuid().optional(),
+        organizationId: z.union([z.uuid(), z.literal("")]).default(""),
+        customerId: z.uuid().optional(),
         page: z.coerce.number().int().min(1).max(100000).default(1),
       })
       .parse(raw);
     const branches = eligibleAssignments(a, "help.raise").filter((x) =>
       allowed(a, x.organizationId, x.centreId, "help.read"),
     );
-    const sourceBranches = (
-      org: typeof leads.organizationId | typeof projects.organizationId,
-      centre: typeof leads.centreId | typeof projects.centreId,
-    ) =>
-      or(
-        ...branches.map((x) =>
-          and(
-            eq(org, x.organizationId),
-            adminOrganizations(a).includes(x.organizationId) ? undefined : eq(centre, x.centreId),
-          ),
-        ),
-      ) ?? sql`false`;
-    const q = sql`select 'lead'::text as kind,leads.id,leads.organization_id as "organizationId",leads.centre_id as "centreId",leads.customer_id as "customerId",leads.project_id as "projectId",leads.id as "leadId",c.name as client,coalesce(p.name,'Lead enquiry') as name,o.name as company,b.name as location from leads join customers c on c.id=leads.customer_id and c.organization_id=leads.organization_id join organizations o on o.id=leads.organization_id join centres b on b.id=leads.centre_id and b.active left join projects p on p.id=leads.project_id where ${leadScope(a)} and ${sourceBranches(leads.organizationId, leads.centreId)} and leads.archived_at is null
-      union all select 'project',projects.id,projects.organization_id,projects.centre_id,projects.customer_id,projects.id,null,c.name,projects.name,o.name,b.name from projects join customers c on c.id=projects.customer_id and c.organization_id=projects.organization_id join organizations o on o.id=projects.organization_id join centres b on b.id=projects.centre_id and b.active where ${projectVisibility(t, a)} and ${sourceBranches(projects.organizationId, projects.centreId)}`;
+    const orgs = [...new Set(branches.map((x) => x.organizationId))];
+    if (!orgs.length) return [];
+    const scope = (column: typeof leads.organizationId | typeof projects.organizationId) =>
+      sql`${column} in (${sql.join(
+        orgs.map((x) => sql`${x}::uuid`),
+        sql`, `,
+      )})`;
+    const q = sql`select 'lead'::text as kind,leads.id,leads.organization_id as "organizationId",leads.centre_id as "centreId",leads.customer_id as "customerId",leads.project_id as "projectId",leads.id as "leadId",c.name as client,coalesce(p.name,'Lead enquiry') as name,o.name as company,b.name as location,coalesce(c.mobile,leads.mobile) as mobile from leads join customers c on c.id=leads.customer_id and c.organization_id=leads.organization_id join organizations o on o.id=leads.organization_id join centres b on b.id=leads.centre_id and b.active left join projects p on p.id=leads.project_id where ${scope(leads.organizationId)} and leads.archived_at is null
+    union all select 'project',projects.id,projects.organization_id,projects.centre_id,projects.customer_id,projects.id,null,c.name,projects.name,o.name,b.name,c.mobile from projects join customers c on c.id=projects.customer_id and c.organization_id=projects.organization_id join organizations o on o.id=projects.organization_id join centres b on b.id=projects.centre_id and b.active where ${scope(projects.organizationId)}
+    union all select 'customer',c.id,c.organization_id,b.id,c.id,null,null,c.name,'Client profile',o.name,b.name,c.mobile from customers c join organizations o on o.id=c.organization_id join lateral(select id,name from centres where organization_id=c.organization_id and active order by (id=c.centre_id) desc nulls last,created_at,id limit 1) b on true where c.organization_id in (${sql.join(
+      orgs.map((x) => sql`${x}::uuid`),
+      sql`, `,
+    )})`;
     return query<HelpSource>(
       t,
-      sql`select * from (${q}) s where (${f.kind ?? ""}='' or s.kind=${f.kind ?? ""}) and (${f.id ?? ""}='' or s.id::text=${f.id ?? ""}) and (s.client ilike ${`%${f.q.replace(/[\\%_]/g, "\\$&")}%`} or s.name ilike ${`%${f.q.replace(/[\\%_]/g, "\\$&")}%`}) order by s.client,s.id,s.kind limit 20 offset ${(f.page - 1) * 20}`,
+      sql`select * from (${q}) s where (${f.kind ?? ""}='' or s.kind=${f.kind ?? ""}) and (${f.id ?? ""}='' or s.id::text=${f.id ?? ""}) and (${f.organizationId}='' or s."organizationId"::text=${f.organizationId}) and (${f.customerId ?? ""}='' or (s."customerId"::text=${f.customerId ?? ""} and s.kind<>'customer')) and (strpos(lower(s.client),lower(${f.q}))>0 or strpos(lower(s.name),lower(${f.q}))>0 or strpos(coalesce(s.mobile,''),${f.q})>0 or (${f.q.replace(/\D/g, "").length >= 3} and regexp_replace(coalesce(s.mobile,''),'[^0-9]','','g') like ${"%" + f.q.replace(/\D/g, "") + "%"})) order by s.client,s.id,s.kind limit 20 offset ${(f.page - 1) * 20}`,
     );
   }
   async function source(t: Database, a: Access, raw: unknown) {
-    const s = sourceSchema.parse(raw),
-      [row] = await sources(t, a, s);
-    return row ?? fail(404, "Lead or project unavailable in your current scope");
+    const f = sourceSchema.parse(raw),
+      [s] = await sources(t, a, f);
+    return s ?? fail(404, "Client, lead or project unavailable in your company");
   }
   async function resolvers(t: Database, org: string, centre: string) {
+    void centre;
     return query<{ id: string; name: string }>(
       t,
-      sql`select distinct u.id,u.name from employee_role_assignments e join employee_profiles p on p.user_id=e.user_id and p.active join "user" u on u.id=p.user_id and coalesce(u.banned,false)=false join centres c on c.id=e.centre_id and c.active where e.organization_id=${org}::uuid and e.centre_id=${centre}::uuid and (e.role in ('Admin','Super Admin') or (exists(select 1 from role_permissions r where r.organization_id=e.organization_id and r.role=e.role and r.permission='help.resolve') and exists(select 1 from role_permissions r where r.organization_id=e.organization_id and r.role=e.role and r.permission='help.read'))) order by u.name,u.id`,
+      sql`select distinct u.id,u.name from employee_role_assignments e join employee_profiles p on p.user_id=e.user_id and p.active join "user" u on u.id=p.user_id and coalesce(u.banned,false)=false join centres c on c.id=e.centre_id and c.organization_id=e.organization_id and c.active where e.organization_id=${org}::uuid order by u.name,u.id`,
     );
   }
   async function policies(t: Database, org: string) {
@@ -190,7 +192,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
   return {
     async directory(h: Headers, ref?: unknown) {
       const a = await access(h),
-        branches = eligibleAssignments(a, "help.read");
+        branches = a.assignments;
       const orgs = [...new Set(branches.map((x) => x.organizationId))];
       const companies = orgs.length
         ? await query<{ id: string; name: string }>(
@@ -215,6 +217,11 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
           )
         : [];
       const selected = ref ? await source(db, a, ref) : null;
+      const intakeOrg =
+        selected?.organizationId ??
+        eligibleAssignments(a, "help.raise").find((x) =>
+          allowed(a, x.organizationId, x.centreId, "help.read"),
+        )?.organizationId;
       return {
         currentUser: { id: a.user.id, name: a.user.name },
         filterResolvers: await query<{ id: string; name: string }>(
@@ -223,11 +230,15 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         ),
         companies,
         centres,
-        canRaise: eligibleAssignments(a, "help.raise").length > 0,
+        canRaise: Boolean(intakeOrg),
         adminOrganizations: adminOrganizations(a),
         selected,
-        resolvers: selected ? await resolvers(db, selected.organizationId, selected.centreId) : [],
-        policies: selected ? await policies(db, selected.organizationId) : [],
+        clients: intakeOrg
+          ? await sources(db, a, { kind: "customer", organizationId: intakeOrg })
+          : [],
+        intakeOrganizationId: intakeOrg ?? "",
+        resolvers: intakeOrg ? await resolvers(db, intakeOrg, "") : [],
+        policies: intakeOrg ? await policies(db, intakeOrg) : [],
       };
     },
     async sources(h: Headers, raw: unknown) {
@@ -238,6 +249,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         s = await source(db, a, raw);
       return {
         source: s,
+        related: await sources(db, a, { customerId: s.customerId }),
         resolvers: await resolvers(db, s.organizationId, s.centreId),
         policies: await policies(db, s.organizationId),
       };
@@ -308,7 +320,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         due_at: string | null;
       }>(
         db,
-        sql`select help_tickets.id,number,c.name as client,o.name as company,b.name as location,u.name as resolver,creator.name as creator,priority,status,concern,help_tickets.created_at,help_tickets.due_at ${from} order by help_tickets.created_at desc,help_tickets.id limit 20 offset ${(f.page - 1) * 20}`,
+        sql`select help_tickets.id,number,c.name as client,o.name as company,coalesce(help_tickets.location,b.name) as location,u.name as resolver,creator.name as creator,priority,status,concern,help_tickets.created_at,help_tickets.due_at ${from} order by help_tickets.created_at desc,help_tickets.id limit 20 offset ${(f.page - 1) * 20}`,
       );
       return {
         rows,
@@ -318,6 +330,17 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         overdue: Number(count.overdue),
         page: f.page,
         pageSize: 20,
+      };
+    },
+    async intake(h: Headers, organizationId: string) {
+      const a = await access(h),
+        org = z.uuid().parse(organizationId);
+      if (!allowed(a, org, "", "help.raise") || !allowed(a, org, "", "help.read"))
+        fail(403, "Help intake is unavailable for this company");
+      return {
+        employees: await resolvers(db, org, ""),
+        policies: await policies(db, org),
+        clients: await sources(db, a, { kind: "customer", organizationId: org }),
       };
     },
     async create(h: Headers, raw: unknown) {
@@ -351,6 +374,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
             leadId: s.leadId,
             projectId: s.projectId,
             createdBy: a.user.id,
+            location: i.location ?? s.location,
             assignedTo: i.assignedTo,
             concern: p.name,
             details: i.details,
@@ -377,7 +401,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         project: string | null;
       }>(
         db,
-        sql`select c.name as client,o.name as company,b.name as location,cr.name as creator,re.name as resolver,p.name as project from help_tickets t join customers c on c.id=t.customer_id join organizations o on o.id=t.organization_id join centres b on b.id=t.centre_id join "user" cr on cr.id=t.created_by join "user" re on re.id=t.assigned_to left join projects p on p.id=t.project_id where t.id=${id}::uuid`,
+        sql`select c.name as client,o.name as company,coalesce(t.location,b.name) as location,cr.name as creator,re.name as resolver,p.name as project from help_tickets t join customers c on c.id=t.customer_id join organizations o on o.id=t.organization_id join centres b on b.id=t.centre_id join "user" cr on cr.id=t.created_by join "user" re on re.id=t.assigned_to left join projects p on p.id=t.project_id where t.id=${id}::uuid`,
       );
       const events = await query<{
         id: string;
@@ -399,9 +423,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         .where(eq(helpTicketFiles.ticketId, id));
       const admin = adminOrganizations(a).includes(ticket.organizationId),
         creator = ticket.createdBy === a.user.id,
-        resolver =
-          ticket.assignedTo === a.user.id &&
-          allowed(a, ticket.organizationId, ticket.centreId, "help.resolve");
+        resolver = isResolver(a, ticket);
       const self = ticket.createdBy === ticket.assignedTo;
       const canConfirm =
         (admin || creator) &&
@@ -442,9 +464,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         const before = await get(t, a, id),
           admin = adminOrganizations(a).includes(before.organizationId),
           creator = before.createdBy === a.user.id,
-          resolver =
-            before.assignedTo === a.user.id &&
-            allowed(a, before.organizationId, before.centreId, "help.resolve");
+          resolver = isResolver(a, before);
         if (i.version !== before.version) fail(409, "Ticket changed. Refresh before trying again.");
         const patch: Partial<typeof helpTickets.$inferInsert> = {
           version: before.version + 1,
@@ -584,8 +604,7 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
         } else {
           const ticket = await get(t, a, i.ticketId!);
           if (
-            ticket.assignedTo !== a.user.id ||
-            !allowed(a, ticket.organizationId, ticket.centreId, "help.resolve") ||
+            !isResolver(a, ticket) ||
             !["raised", "in_progress", "reopened"].includes(ticket.status)
           )
             fail(403, "Only the current resolver can upload resolution proof");
@@ -629,16 +648,12 @@ export function helpService(db: Database, settings: AuthSettings, store?: HelpSt
           f.uploadedBy !== a.user.id ||
           f.ticketId ||
           f.expiresAt < new Date() ||
-          !allowed(a, f.organizationId, f.centreId, "help.read")
+          !a.assignments.some((x) => x.organizationId === f.organizationId)
         )
           fail(404, "Upload unavailable or expired");
         if (f.sourceKind === "ticket") {
           const ticket = await get(t, a, f.sourceId);
-          if (
-            ticket.assignedTo !== a.user.id ||
-            !allowed(a, ticket.organizationId, ticket.centreId, "help.resolve")
-          )
-            fail(403, "Resolver assignment changed");
+          if (!isResolver(a, ticket)) fail(403, "Resolver assignment changed");
         } else await source(t, a, { kind: f.sourceKind, id: f.sourceId });
         if (!store) fail(503, "Private help-ticket storage unavailable");
         const bytes = await store!.read(f.objectPath);

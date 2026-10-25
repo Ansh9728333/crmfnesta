@@ -191,3 +191,12 @@ current plan-specific limits and platform instructions when executing this check
   records. Smoke-check live empty/scoped pages without inserting fabricated tickets.
 - See HELP_TICKETS.md for lease expiry/orphan cleanup, permission configuration,
   immutable evidence and the absence of automatic external notifications.
+
+Help intake refinement: apply reviewed additive 0024/0025 through the same runner.
+Verify all 26 source hashes, 57-table RLS/browser denial and unchanged Storage guards.
+The new location trigger supports previous-version inserts during rolling release.
+Verify all questions before client selection, company-shared minimal contacts,
+automatic name/mobile lookup, client-only submissions and typed locations. Confirm
+that any named active company employee can resolve only their assigned ticket;
+deactivation/reassignment/company removal must revoke the corresponding access.
+No broad employee role grants or general CRM record access are required.

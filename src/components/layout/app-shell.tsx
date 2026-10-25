@@ -119,7 +119,8 @@ function Navigation({ mobile = false, employee }: { mobile?: boolean; employee: 
               .filter(
                 (m) =>
                   m.group === group &&
-                  (employee.permissions.includes(modulePermission[m.slug]) ||
+                  (m.slug === "help-tickets" ||
+                    employee.permissions.includes(modulePermission[m.slug]) ||
                     (m.slug === "installations" &&
                       (employee.permissions.includes("orders.manage") ||
                         employee.permissions.includes("audits.manage")))),

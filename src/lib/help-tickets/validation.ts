@@ -24,10 +24,14 @@ export const labels: Record<string, string> = {
   reopened: "Reopened",
   closed: "Closed",
 };
-export const sourceSchema = z.object({ kind: z.enum(["lead", "project"]), id: z.uuid() });
+export const sourceSchema = z.object({
+  kind: z.enum(["lead", "project", "customer"]),
+  id: z.uuid(),
+});
 export const createSchema = sourceSchema
   .extend({
     requestId: z.uuid(),
+    location: z.string().trim().min(1).max(200).optional(),
     concern: z.string().trim().min(1).max(80),
     details: z.string().trim().min(5).max(5000),
     priority: z.enum(priorities),
