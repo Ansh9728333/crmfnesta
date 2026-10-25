@@ -1,5 +1,10 @@
 # SiteFlow CRM production-readiness audit
 
+Update, 25 October 2026: the user subsequently authorized the live rollout.
+See [deployment record](DEPLOYMENT_STATUS.md) for verified Supabase/Vercel production
+results and still-open operational work. The audit below preserves the 24 October
+state and must not be read as the current deployment status.
+
 Audit date: 24 October 2026. Release decision: **HOLD for live acceptance**.
 No deployment, push, external provisioning, live migration or customer messaging
 was performed. This is a repository audit and isolated test result, not a

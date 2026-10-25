@@ -386,6 +386,19 @@ dry-run manifest excludes all local data/secrets and test infrastructure. Fresh 
 TypeScript and 45 unit tests pass; the first pushed commit's full hosted CI also
 ran integration/browser/build checks successfully. Production deployment follows.
 
+Live release completed, 25 October 2026: application commit 2357ee3 is deployed at
+https://crmfnesta.vercel.app (dpl_CB3wbcVUeHgt8FotmG5bkP1VUWbg). Vercel clean npm ci
+reported zero vulnerabilities; production build/typecheck passed, and runtime
+functions are confirmed in sin1. The deployed commit's full hosted CI passed.
+Live HTTPS checks passed for sign-in, no-store/CSP/security headers, anonymous/raw
+Admin denial, secure session cookies, first-login password-change and 428 API gates,
+logout/revocation. Chromium desktop sign-in/change-password/sign-out and mobile
+layout checks passed; screenshots were captured before credentials were filled.
+Production password was not changed by automation; the user must change it at first
+login. No fake customer/lead/order records were inserted. See DEPLOYMENT_STATUS.md
+for exact evidence, credential-rotation recommendation, GitHub auto-deploy connection
+requirement and unperformed recovery/concurrency/performance/business acceptance.
+
 Phase 5 verification, 24 October 2026: lint, TypeScript and production build pass;
 24 unit tests, 43 isolated database integration tests, 8 public browser checks and
 10 authenticated desktop/mobile browser tests pass. Single/multiple loads, 40-item

@@ -14,11 +14,13 @@ For an isolated persistent localhost test database without Supabase, see
 and supplying the ignored administrator identity. This opt-in test harness is not
 a production database fallback; Supabase Storage is unavailable in that mode.
 
-Release status: repository security hardening and isolated workflow verification
-are documented in [production readiness audit](docs/PRODUCTION_READINESS_AUDIT.md).
-Use the [Supabase, GitHub and Vercel checklist](docs/DEPLOYMENT_CHECKLIST.md)
-before an authorized release. Live credentials, Storage acceptance, recovery drills
-and hosted platform settings remain unverified. Nothing has been deployed.
+Live application: [SiteFlow CRM](https://crmfnesta.vercel.app), deployed on
+25 October 2026 from application release 2357ee3. Supabase migration/TLS/RLS,
+private Storage, production auth and desktop/mobile login checks are verified.
+See [deployment record](docs/DEPLOYMENT_STATUS.md) and
+[remaining operational checklist](docs/DEPLOYMENT_CHECKLIST.md), including credential
+rotation, recovery drills and connecting GitHub automatic deployments. The
+[24 October audit](docs/PRODUCTION_READINESS_AUDIT.md) is a historical snapshot.
 
 Use Node.js 24 LTS and npm. The package engine and CI use Node 24.
 

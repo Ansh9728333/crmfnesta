@@ -1,6 +1,9 @@
 # Live deployment record
 
-Date: 25 October 2026. Status: production deployment pending final build.
+Date: 25 October 2026. Status: **LIVE — production build and HTTPS/auth checks passed**.
+
+Deployed application release: `2357ee3`.
+Vercel deployment: `dpl_CB3wbcVUeHgt8FotmG5bkP1VUWbg`.
 
 | Resource                | Target                                             |
 | ----------------------- | -------------------------------------------------- |
@@ -50,5 +53,26 @@ are provided only in the ignored local production account file.
   been performed. Isolated tests do not establish those results.
 - No automated WhatsApp, review request, email or SMS sending is claimed.
 
-Production HTTP/auth verification and the deployed release identifier will be added
-after the build finishes. Do not interpret the intended URL alone as proof of release.
+## Production verification
+
+Production URL: [SiteFlow CRM](https://crmfnesta.vercel.app).
+The Vercel build ran a clean `npm ci` (zero reported dependency vulnerabilities),
+compiled/typechecked Next.js and reached Ready. Inspection confirms runtime functions
+in sin1; the build machine location is separate from the function region.
+
+[Release CI](https://github.com/Ansh9728333/crmfnesta/actions/runs/40165756312)
+passed for the exact deployed application commit. Live checks verified:
+
+- HTTPS sign-in page, no-store, nonce CSP and security headers.
+- Anonymous employee API denial and blocked raw Admin-plugin endpoints.
+- Real administrator sign-in with Secure/HttpOnly/SameSite cookies.
+- Mandatory first-login password-change redirect and 428 API restriction.
+- Password-change page rendering, sign-out and server session revocation.
+- Desktop browser login/sign-out and a responsive mobile sign-in page without
+  horizontal overflow. Screenshots were saved only before credentials were filled.
+
+The temporary production password was not changed by automation. The administrator
+must choose a new password at first login. No lead/order/customer test records were
+inserted into production. Full live business acceptance and the operational items
+above remain outstanding. Subsequent documentation-only commits do not change the
+deployed application; Git-based automatic deployment is not connected yet.
