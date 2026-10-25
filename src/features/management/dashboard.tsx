@@ -1,5 +1,21 @@
 import Link from "next/link";
-import { BarChart3, Bell, ShieldCheck, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  ShieldCheck,
+  Users,
+  Activity,
+  CircleCheck,
+  CircleX,
+  IndianRupee,
+  CalendarClock,
+  Factory,
+  Truck,
+  HardHat,
+  ClipboardCheck,
+  type LucideIcon,
+} from "lucide-react";
+import { MetricCard, type MetricTone } from "@/components/ui/metric-card";
 import { money } from "@/features/leads/utils";
 import { ManagementFilters } from "./filters";
 import { ReportTable } from "./report-table";
@@ -25,6 +41,120 @@ const metrics: Record<string, string> = {
   pending_site_handovers: "Pending Site Handovers",
   open_service_tickets: "Open Service Tickets",
 };
+const icons: Record<string, LucideIcon> = {
+  total_leads: Users,
+  active_leads: Activity,
+  won_orders: CircleCheck,
+  lost_orders: CircleX,
+  conversion_rate: BarChart3,
+  pending_follow_ups: CalendarClock,
+  pending_surveys: CalendarClock,
+  orders_in_production: Factory,
+  active_production_loads: Factory,
+  delayed_production_loads: Factory,
+  pending_dispatches: Truck,
+  pending_installations: HardHat,
+  pending_engineer_audits: ClipboardCheck,
+  pending_site_handovers: ClipboardCheck,
+  open_service_tickets: Bell,
+};
+function tone(key: string): MetricTone {
+  if (
+    [
+      "lost_orders",
+      "delayed_production_loads",
+      "outstanding_payments",
+      "open_service_tickets",
+    ].includes(key)
+  )
+    return "red";
+  if (["won_orders", "payments_received", "confirmed_order_value"].includes(key)) return "green";
+  if (key.startsWith("pending_") || key === "active_leads") return "amber";
+  return "blue";
+}
+function metricValue(key: string, value: string | number | null | undefined) {
+  if (value === null || value === undefined) return "Restricted";
+  if (key === "conversion_rate") return `${value}%`;
+  if (
+    [
+      "expected_pipeline_value",
+      "confirmed_order_value",
+      "payments_received",
+      "outstanding_payments",
+    ].includes(key)
+  )
+    return money(String(value));
+  return value;
+}
+function WorkloadPanels({ data }: { data: Dashboard }) {
+  const queues = [
+    "pending_follow_ups",
+    "pending_surveys",
+    "pending_dispatches",
+    "pending_installations",
+    "pending_engineer_audits",
+  ];
+  const maximum = Math.max(1, ...queues.map((key) => Number(data.kpis[key] ?? 0)));
+  return (
+    <div className="col-span-full grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <section className="rounded-xl border bg-white p-5 sm:p-6" aria-label="Operational workload">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold">Operational workload</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Pending records in your selected scope
+            </p>
+          </div>
+          <BarChart3 size={21} className="text-[#285de5]" />
+        </div>
+        <div className="space-y-4">
+          {queues.map((key, index) => (
+            <div key={key}>
+              <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+                <span>{metrics[key]}</span>
+                <strong className="tabular-nums">{data.kpis[key] ?? "Restricted"}</strong>
+              </div>
+              <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${(Number(data.kpis[key] ?? 0) / maximum) * 100}%`,
+                    backgroundColor: ["#285de5", "#d99c00", "#087f5b", "#c72239", "#8752c9"][index],
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="rounded-xl border bg-white p-5 sm:p-6" aria-label="Collection summary">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold">Collection summary</h2>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Verified receipts and selected order balances
+            </p>
+          </div>
+          <IndianRupee size={21} className="text-[#087f5b]" />
+        </div>
+        <div className="space-y-3">
+          {[
+            ["payments_received", "Verified collections", "text-[#06664b] bg-[#e4f5ed]"],
+            ["outstanding_payments", "Outstanding balance", "text-[#bd2036] bg-[#fcecf0]"],
+            ["confirmed_order_value", "Confirmed business", "text-[#244ca3] bg-[#eaf0ff]"],
+          ].map(([key, label, color]) => (
+            <div key={key} className={`rounded-lg px-4 py-3 ${color}`}>
+              <p className="text-[11px] font-medium">{label}</p>
+              <p className="mt-1 break-words text-xl font-semibold tabular-nums">
+                {metricValue(key, data.kpis[key])}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
 export function ManagementDashboard({
   data: d,
   directory,
@@ -63,47 +193,41 @@ export function ManagementDashboard({
         </nav>
       </header>
       <ManagementFilters directory={directory} f={d.filters} />
-      <section className="rounded-2xl bg-primary p-6 text-white sm:p-8">
-        <TrendingUp className="mb-3 size-6" />
-        <h2 className="text-xl font-medium">From first enquiry to customer handover.</h2>
-        <p className="mt-3 max-w-3xl text-xs leading-6 text-white/80">
-          Conversion = won leads ÷ total non-archived leads. Lead dates and order dates define the
-          selected cohorts. Verified payments and outstanding balances cover those orders. Financial
-          results require payment access.
-        </p>
-      </section>
       <section
         aria-label="Dashboard KPIs"
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
-        {Object.entries(metrics).map(([key, label]) => {
-          const v = d.kpis[key];
-          return (
-            <article key={key} className="rounded-xl border bg-white p-5">
-              <h2 className="text-xs font-medium text-muted-foreground">{label}</h2>
-              <p className="mt-3 text-2xl font-semibold tabular-nums">
-                {v === null
-                  ? "Restricted"
-                  : key === "conversion_rate"
-                    ? `${v}%`
-                    : [
-                          "expected_pipeline_value",
-                          "confirmed_order_value",
-                          "payments_received",
-                          "outstanding_payments",
-                        ].includes(key)
-                      ? money(String(v))
-                      : v}
-              </p>
-            </article>
-          );
-        })}
+        {Object.entries(metrics)
+          .slice(0, 4)
+          .map(([key, label]) => (
+            <MetricCard
+              key={key}
+              label={label}
+              value={metricValue(key, d.kpis[key])}
+              tone={tone(key)}
+              icon={icons[key] ?? IndianRupee}
+              solid
+            />
+          ))}
+        <WorkloadPanels data={d} />
+        {Object.entries(metrics)
+          .slice(4)
+          .map(([key, label]) => (
+            <MetricCard
+              key={key}
+              label={label}
+              value={metricValue(key, d.kpis[key])}
+              tone={tone(key)}
+              icon={icons[key] ?? IndianRupee}
+            />
+          ))}
       </section>
       <ReportTable data={d.companies} />
       <p className="text-xs leading-6 text-muted-foreground">
-        Operational counts use allocated loads and recorded workflow states. Delays require a
-        recorded target date and use the company’s SLA grace period. Date ranges are inclusive in
-        IST. Review requests never require a positive review.
+        Conversion = won leads ÷ total non-archived leads. Lead dates and order dates define their
+        selected cohorts. Operational counts use allocated loads and recorded workflow states.
+        Delays require a recorded target date and use the company’s SLA grace period. Date ranges
+        are inclusive in IST. Review requests never require a positive review.
       </p>
     </div>
   );

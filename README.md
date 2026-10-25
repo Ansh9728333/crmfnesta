@@ -94,9 +94,10 @@ Montserrat is self-hosted under `src/assets` with its OFL license.
 `/admin/employees` is restricted on the server to Admin/Super Admin assignments.
 Create employees with real unique emails, globally unique usernames, generated
 employee codes, mobile, department, status and one or multiple organization/branch/
-role assignments. Initial passwords are never returned after provisioning, stored
-in plaintext, emailed or persisted in the browser. Share temporary credentials only
-through an approved private channel. Creation/reset forces a password change.
+designation/role assignments. Admin selects the username and password; passwords
+are never returned after provisioning, stored in plaintext, emailed or persisted
+in browser storage. Share the selected credentials through an approved private
+channel. Creation/reset permits direct sign-in without a forced password change.
 
 The interface supports search, role/branch/status filters, creation modal, edit
 drawer, activation/deactivation, password reset, session revocation, last login and
@@ -195,7 +196,7 @@ endpoints and invalid-login presentation. A stub is used only for the latter UI
 presentation test, never as a production backend or credential/security test.
 The authenticated browser suite starts a disposable PostgreSQL wire-protocol
 test server on loopback and runs the actual Postgres.js driver and production Next.js
-application. It verifies employee creation, first login/password change, scoped
+application. It verifies Admin-selected direct login, optional password changes, scoped
 access, role edits, password reset, activation/deactivation, revocation and logout
 through the desktop/mobile UI. This test server overrides environment variables
 only in its child process; it never connects to Supabase or reads real credentials.
@@ -228,7 +229,7 @@ showroom/negotiation and order conversion. `/orders` is the real post-sales dash
 `/orders/settings` provides Admin stage responsibilities and mandatory fields.
 `/installations` provides per-load installation, S-Grip glass, engineer audits and handover; `/service` provides feedback and complaint/service tickets. `/documents` retains
 placeholders. `/admin/employees` provides employee administration;
-`/change-password` for authenticated employees, including first-login sessions.
+`/change-password` remains an optional authenticated own-password change page.
 
 `src/lib/db` owns schemas/runtime client; `src/lib/auth` owns identity/access;
 `src/lib/employees` owns scoped account services; `src/lib/documents` owns private

@@ -406,3 +406,36 @@ Phase 5 verification, 24 October 2026: lint, TypeScript and production build pas
 attempts, SQL counter/capacity guards, independent early production, immutable
 history, permissions and handover aggregation are covered. Live Supabase migration
 and independent-connection verification remain pending real environment settings.
+
+## Phase 10 — Reference-inspired theme and Admin-selected account passwords
+
+User requested a charcoal navigation/header and bright multi-colour dashboard based
+on the supplied image, plus Admin-created username/password/designation without
+temporary credentials or first-login change. Shared semantic tokens, shell, mobile
+drawer, metric-card primitive and management/pre-sales/order views are updated.
+Operational bars and collection summaries use existing scoped real metrics only.
+
+Employee creation/reset/bootstrap now preserve the Admin-selected password as the
+normal login password. Designation labels map to the canonical permission-bearing
+company/branch role assignments. Password hashing, minimum length, Admin scope,
+session revocation and public endpoint restrictions remain enforced. Optional own
+password changes are retained. Reviewed migration 0021 retires legacy flags with
+immutable policy audits and leaves credential hashes unchanged. Acceptance: direct
+login after create/reset, unauthorized management denial, designation scope, audited
+backfill, all regression suites, responsive/focus checks and production rollout.
+See docs/UI_ADMIN_ACCOUNTS.md. Verification and rollout results follow below.
+
+Phase 10 verification: lint, TypeScript, 45 unit tests, 54 isolated database tests,
+production build, all 10 public browser checks and all 16 authenticated desktop/mobile
+CRM browser tests pass. Four focused employee/management browser checks were repeated
+successfully after final spacing/contrast refinements. Browser coverage verifies direct
+create/reset login, designation access, revoked sessions, real global search, mobile
+navigation focus restoration and no horizontal overflow. Dashboard screenshots were
+reviewed. Tested card/body contrast pairs exceed 4.5:1. Legacy password hashes remain
+unchanged during the audited flag backfill. Generated Better Auth schema is unchanged.
+
+Migration publication review also detected historical Git newline normalization on
+five already-applied SQL artifacts. Their SQL was not changed; .gitattributes now
+preserves original SQL bytes, and the staged artifacts match the actual previously
+applied sources. No database ledger hashes were rewritten. This keeps future clean
+checkouts/migration hash verification reproducible. Live rollout follows.

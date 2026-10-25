@@ -123,6 +123,8 @@ async function main() {
         ...process.env,
         DATABASE_URL: databaseUrl,
         DIRECT_URL: databaseUrl,
+        DATABASE_SSL_CA: "",
+        VERCEL_OIDC_TOKEN: "",
         BETTER_AUTH_SECRET: settings.secret,
         BETTER_AUTH_URL: settings.url,
         NEXT_PUBLIC_APP_URL: settings.url,

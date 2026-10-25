@@ -51,7 +51,7 @@ export const employeeProfiles = pgTable("employee_profiles", {
   mobile: text("mobile").notNull(),
   department: text("department").notNull(),
   active: boolean("active").notNull().default(true),
-  mustChangePassword: boolean("must_change_password").notNull().default(true),
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   lastLoginAt: time("last_login_at"),
   createdAt: time("created_at").defaultNow().notNull(),
 });

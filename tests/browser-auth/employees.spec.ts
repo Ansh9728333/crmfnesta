@@ -8,7 +8,10 @@ async function signIn(page: Page, username: string, password: string) {
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }
 async function changePassword(page: Page, current: string, next: string) {
-  await expect(page).toHaveURL(/\/change-password$/);
+  await page.goto("/change-password");
+  await expect(
+    page.getByRole("heading", { name: "Change your password", exact: true }),
+  ).toBeVisible();
   await page.getByLabel("Current password", { exact: true }).fill(current);
   await page.getByLabel("New password", { exact: true }).fill(next);
   await page.getByLabel("Confirm new password", { exact: true }).fill(next);
@@ -33,7 +36,8 @@ test("Admin provisions and manages an employee through real authenticated UI", a
   await modal.getByLabel("Email", { exact: true }).fill(`${username}@example.test`);
   await modal.getByLabel("Mobile number", { exact: true }).fill("+919000000002");
   await modal.getByLabel("Department", { exact: true }).fill("Sales");
-  await modal.getByLabel("Initial password", { exact: false }).fill(browserEmployee.initial);
+  await modal.getByLabel("Employee password", { exact: false }).fill(browserEmployee.initial);
+  await modal.getByLabel("Designation 1", { exact: true }).selectOption("Sales Executive");
   await page.screenshot({ path: testInfo.outputPath("create-employee.png"), fullPage: true });
   await modal.getByRole("button", { name: "Review new employee" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click();
@@ -49,22 +53,24 @@ test("Admin provisions and manages an employee through real authenticated UI", a
   });
   const employeePage = await employeeContext.newPage();
   await signIn(employeePage, username, browserEmployee.initial);
+  await expect(employeePage).toHaveURL("http://127.0.0.1:3100/");
   await changePassword(employeePage, browserEmployee.initial, browserEmployee.password);
   expect((await employeeContext.request.get("/api/admin/employees")).status()).toBe(403);
   await employeePage.goto("/admin/employees");
   await expect(employeePage.getByRole("heading", { name: "Access restricted" })).toBeVisible();
 
   await row.getByRole("button", { name: "Reset password", exact: true }).click();
-  await page.getByLabel("New temporary password").fill(browserEmployee.reset);
+  await page.getByLabel("New employee password").fill(browserEmployee.reset);
   await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(page.getByRole("alertdialog")).not.toBeVisible();
   expect((await employeeContext.request.get("/api/admin/employees")).status()).toBe(401);
   await signIn(employeePage, username, browserEmployee.reset);
+  await expect(employeePage).toHaveURL("http://127.0.0.1:3100/");
   await changePassword(employeePage, browserEmployee.reset, browserEmployee.final);
 
-  await row.getByRole("button", { name: "Edit / Change role", exact: true }).click();
+  await row.getByRole("button", { name: "Edit / Change designation", exact: true }).click();
   const drawer = page.getByRole("dialog", { name: "Edit employee", exact: true });
-  await drawer.getByLabel("Role 1", { exact: true }).selectOption("Accounts");
+  await drawer.getByLabel("Designation 1", { exact: true }).selectOption("Accounts");
   await drawer.getByRole("button", { name: "Review changes" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click();
   await expect(drawer).not.toBeVisible();

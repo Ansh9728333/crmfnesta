@@ -86,7 +86,7 @@ Git-based deployments still require the `.gitignore`/initial commit secret revie
       and no bucket listing is exposed. Never test destructive suites on production.
 - [ ] Provision the first real administrator with `npm run admin:bootstrap` from
       a trusted operator using one-time BOOTSTRAP_* secrets. Supply a real unique
-      email; complete forced password change, remove all bootstrap variables,
+      email and an Admin-selected password; verify direct sign-in, remove all bootstrap variables,
       verify ordinary employee provisioning and revocation. No public bootstrap,
       Supabase Auth signup or synthetic address is part of this architecture.
 

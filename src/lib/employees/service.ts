@@ -176,6 +176,7 @@ export function employeeService(db: Database, settings: AuthSettings) {
           mobile: data.mobile,
           department: data.department,
           active: data.active,
+          mustChangePassword: false,
         });
         await tx
           .insert(employeeRoleAssignments)
@@ -268,7 +269,7 @@ export function employeeService(db: Database, settings: AuthSettings) {
           await auth.api.setUserPassword({ headers, body: { userId: id, newPassword: password! } });
           await tx
             .update(employeeProfiles)
-            .set({ mustChangePassword: true })
+            .set({ mustChangePassword: false })
             .where(eq(employeeProfiles.userId, id));
         }
         if (action === "activate" || action === "deactivate") {

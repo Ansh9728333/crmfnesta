@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AlertCircle, ArrowUpRight, SlidersHorizontal } from "lucide-react";
+import { AlertCircle, ArrowUpRight, SlidersHorizontal, ClipboardList } from "lucide-react";
+import { MetricCard, type MetricTone } from "@/components/ui/metric-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,11 +44,15 @@ export function OrderDashboard({
           ["Overdue tasks", result.totals.overdue],
           ["Unassigned stages", result.totals.unassigned],
           ["Awaiting approval", result.totals.awaiting],
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border bg-white p-5">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <strong className="mt-3 block text-2xl">{value}</strong>
-          </div>
+        ].map(([label, value], index) => (
+          <MetricCard
+            key={label}
+            label={String(label)}
+            value={value}
+            icon={ClipboardList}
+            tone={(["blue", "green", "red", "amber", "blue"] as MetricTone[])[index]}
+            solid
+          />
         ))}
       </div>
       {(result.totals.overdue > 0 ||

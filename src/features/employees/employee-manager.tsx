@@ -129,12 +129,12 @@ export function EmployeeManager({
             />
           </div>
           <select
-            aria-label="Filter by role"
+            aria-label="Filter by designation"
             className={selectStyle}
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="all">All roles</option>
+            <option value="all">All designations</option>
             {roles.map((r) => (
               <option key={r}>{r}</option>
             ))}
@@ -172,7 +172,7 @@ export function EmployeeManager({
                   "Employee code",
                   "Name",
                   "Username",
-                  "Role",
+                  "Designation",
                   "Centre / Branch",
                   "Status",
                   "Last login",
@@ -213,9 +213,6 @@ export function EmployeeManager({
                     <Badge variant={e.active ? "secondary" : "outline"}>
                       {e.active ? "Active" : "Inactive"}
                     </Badge>
-                    {e.mustChangePassword && (
-                      <p className="mt-2 text-[9px] text-muted-foreground">Password change due</p>
-                    )}
                   </td>
                   <td className="px-4 py-5 text-[10px]">
                     {e.lastLoginAt
@@ -239,7 +236,7 @@ export function EmployeeManager({
                             setEditing(e);
                           }}
                         >
-                          Edit / Change role
+                          Edit / Change designation
                         </Button>
                         {(
                           [
@@ -343,8 +340,9 @@ export function EmployeeManager({
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogTitle>Create employee</DialogTitle>
           <DialogDescription>
-            Use a real, unique email. No invitation or password email is sent. Share the initial
-            password through an approved private channel.
+            Use a real, unique email. No invitation or password email is sent. Share the
+            Admin-selected password through an approved private channel. The employee can sign in
+            directly.
           </DialogDescription>
           {creating && (
             <EmployeeForm
@@ -352,9 +350,7 @@ export function EmployeeManager({
               onSave={async (body) => {
                 await mutate("/api/admin/employees", "POST", body);
                 setCreating(false);
-                setNotice(
-                  "Employee created. Their initial password must be changed at first sign-in.",
-                );
+                setNotice("Employee created with the Admin-selected password and designation.");
               }}
             />
           )}
@@ -402,8 +398,8 @@ export function EmployeeManager({
                   : "Revoke employee sessions?"}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This affects {confirm?.employee.name}. Active sessions will be revoked. A reset password
-            must be changed on the next sign-in.
+            This affects {confirm?.employee.name}. Active sessions will be revoked. The employee can
+            sign in directly with the password you set.
           </AlertDialogDescription>
           <form
             onSubmit={async (event) => {
@@ -429,7 +425,7 @@ export function EmployeeManager({
             {confirm?.action === "reset-password" && (
               <div className="my-4">
                 <label htmlFor="reset-password" className="text-xs font-medium">
-                  New temporary password
+                  New employee password
                 </label>
                 <Input
                   id="reset-password"
@@ -563,7 +559,7 @@ function EmployeeForm({
           {!employee && (
             <div className="sm:col-span-2">
               <label htmlFor="initial-password" className="text-xs font-medium">
-                Initial password · at least 12 characters
+                Employee password · at least 12 characters
               </label>
               <Input
                 id="initial-password"
@@ -584,7 +580,7 @@ function EmployeeForm({
         </p>
         <fieldset className="space-y-3">
           <legend className="mb-3 text-xs font-semibold">
-            Organization, branch & role assignments
+            Organization, branch & designation assignments
           </legend>
           {assignments.map((a, i) => (
             <div className="grid gap-2 rounded-lg border bg-background p-3" key={i}>
@@ -639,7 +635,7 @@ function EmployeeForm({
                     ))}
                 </select>
                 <select
-                  aria-label={`Role ${i + 1}`}
+                  aria-label={`Designation ${i + 1}`}
                   className={selectStyle}
                   value={a.role}
                   onChange={(e) =>
@@ -698,10 +694,10 @@ function EmployeeForm({
             {employee ? "Save employee changes?" : "Create this employee?"}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {draft?.name} will have {draft?.assignments.length} branch and role assignments.{" "}
+            {draft?.name} will have {draft?.assignments.length} branch and designation assignments.{" "}
             {employee
               ? "Existing sessions will be revoked."
-              : "A password change will be required at first sign-in."}
+              : "They can sign in directly with the password you selected."}
           </AlertDialogDescription>
           {error && (
             <p role="alert" className="text-xs text-destructive">

@@ -77,7 +77,9 @@ beforeAll(async () => {
   });
   const loginResult = await login("admin", initialPassword);
   expect(loginResult.response.status).toBe(200);
-  await expect(resolveAccess(db, auth, loginResult.headers)).rejects.toMatchObject({ status: 428 });
+  expect((await resolveAccess(db, auth, loginResult.headers)).profile.mustChangePassword).toBe(
+    false,
+  );
   const changed = await changeEmployeePassword(db, settings, loginResult.headers, {
     currentPassword: initialPassword,
     newPassword: password,
@@ -107,6 +109,32 @@ afterAll(async () => {
 });
 
 describe("real PostgreSQL authentication and authorization", () => {
+  it("retires legacy first-login flags with audit history without changing credentials", async () => {
+    const administrator = await resolveAccess(db, auth, adminHeaders);
+    const [before] = await db
+      .select()
+      .from(schema.account)
+      .where(eq(schema.account.userId, administrator.user.id));
+    await db
+      .update(schema.employeeProfiles)
+      .set({ mustChangePassword: true })
+      .where(eq(schema.employeeProfiles.userId, administrator.user.id));
+    const migration = readMigrationFiles({ migrationsFolder: "./drizzle" }).at(-1)!;
+    await db.transaction(async (transaction) => {
+      for (const statement of migration.sql) await transaction.execute(sql.raw(statement));
+    });
+    const [after] = await db
+      .select()
+      .from(schema.account)
+      .where(eq(schema.account.userId, administrator.user.id));
+    expect(after.password).toBe(before.password);
+    expect((await resolveAccess(db, auth, adminHeaders)).profile.mustChangePassword).toBe(false);
+    const policyAudits = await db
+      .select()
+      .from(schema.auditLogs)
+      .where(eq(schema.auditLogs.action, "employee.password-policy-updated"));
+    expect(policyAudits).toHaveLength(3);
+  });
   it("rejects oversized and non-JSON login requests before credential handling", async () => {
     const oversized = await handleAuth(
       request("/sign-in/username", { username: "body-limit-test", password: "x".repeat(4096) }),
@@ -136,7 +164,7 @@ describe("real PostgreSQL authentication and authorization", () => {
       .from(schema.employeeProfiles)
       .where(eq(schema.employeeProfiles.userId, employeeId));
     expect(profile.employeeCode).toMatch(/^SF-/);
-    expect(profile.mustChangePassword).toBe(true);
+    expect(profile.mustChangePassword).toBe(false);
     const [credential] = await db
       .select()
       .from(schema.account)
@@ -176,10 +204,10 @@ describe("real PostgreSQL authentication and authorization", () => {
       }),
     ).rejects.toBeDefined();
   });
-  it("supports username login and enforces first-login password change", async () => {
+  it("permits direct login with the Admin-selected password and optional own password changes", async () => {
     const result = await login("EMPLOYEE.ONE", initialPassword);
     expect(result.response.status).toBe(200);
-    await expect(resolveAccess(db, auth, result.headers)).rejects.toMatchObject({ status: 428 });
+    expect((await resolveAccess(db, auth, result.headers)).user.id).toBe(employeeId);
     const changed = await changeEmployeePassword(db, settings, result.headers, {
       currentPassword: initialPassword,
       newPassword: password,
@@ -262,14 +290,14 @@ describe("real PostgreSQL authentication and authorization", () => {
     await service.action(adminHeaders, employeeId, "activate");
     employeeHeaders = (await login("employee.one", password)).headers;
   });
-  it("Admin password reset revokes sessions and forces another password change", async () => {
+  it("Admin password reset revokes sessions and permits direct login with the selected password", async () => {
     await service.action(adminHeaders, employeeId, "reset-password", initialPassword);
     await expect(resolveAccess(db, auth, employeeHeaders)).rejects.toMatchObject({ status: 401 });
     const resetLogin = await login("employee.one", initialPassword);
     expect(resetLogin.response.status).toBe(200);
-    await expect(resolveAccess(db, auth, resetLogin.headers)).rejects.toMatchObject({
-      status: 428,
-    });
+    expect((await resolveAccess(db, auth, resetLogin.headers)).profile.mustChangePassword).toBe(
+      false,
+    );
     employeeHeaders = headersFrom(
       await changeEmployeePassword(db, settings, resetLogin.headers, {
         currentPassword: initialPassword,

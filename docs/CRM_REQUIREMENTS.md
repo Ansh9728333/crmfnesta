@@ -79,7 +79,9 @@ production pipeline. No glass activities are required when Glass Required is No.
 
 ## Experience
 
-Off-white background, charcoal text, deep green accent, Montserrat typography.
+Light neutral background, dark charcoal sidebar/header, red navigation/actions,
+and blue, amber, green and red metric cards, following the user's dashboard reference.
+Keep Montserrat typography and readable contrast (amber cards use dark text).
 Responsive sidebar and desktop/mobile layouts. Clean tables, cards, filters,
 status badges, forms, and drawers. Accessible labels, keyboard navigation,
 visible focus states, and reduced-motion support.
@@ -117,7 +119,11 @@ database credentials. No sample customer data or invented business totals.
 - One-time local CLI bootstrap takes real details and an initial secret from the
   environment, runs transactionally, and closes permanently after any user exists.
 - Passwords are hashed by Better Auth, never stored or displayed in plaintext.
-  Initial and reset passwords require a change at first login (minimum 12 chars).
+  Admin selects the account username and password (minimum 12 chars), and assigns
+  the employee's designation through canonical company/branch role assignments.
+  No temporary account password is generated, and no first-login password change
+  is required. Admin resets revoke existing sessions; employees can then sign in
+  directly with the selected password. Authenticated own-password changes remain optional.
 - Deny inactive users. Deactivation, password reset, role edits and explicit access
   revocation invalidate sessions. Re-read permissions on every service operation.
 - Employee fields: name, generated employee code, username, email, mobile,

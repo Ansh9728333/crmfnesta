@@ -77,6 +77,28 @@ test("manages settings, filters real KPIs, exports reports and reads scoped noti
     page.locator("article").filter({ has: page.getByRole("heading", { name, exact: true }) });
   await expect(metric("Total Leads").getByText("1", { exact: true })).toBeVisible();
   await expect(metric("Expected Pipeline Value").getByText(/123\.45/)).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Operational workload", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Collection summary", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  if (info.project.name === "mobile") {
+    await page.getByRole("button", { name: "Open navigation", exact: true }).click();
+    await expect(page.getByRole("navigation", { name: "Main navigation" }).last()).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: "Open navigation", exact: true })).toBeFocused();
+  } else {
+    const dashboardUrl = page.url();
+    await page
+      .getByRole("searchbox", { name: "Search all leads", exact: true })
+      .fill(`Management customer ${info.project.name}`);
+    await page.getByRole("button", { name: "Submit global lead search", exact: true }).click();
+    await expect(page).toHaveURL(/\/leads\?q=/);
+    await expect(
+      page.getByText(`Management customer ${info.project.name}`, { exact: true }).first(),
+    ).toBeVisible();
+    await page.goto(dashboardUrl);
+  }
   await page.reload();
   await expect(metric("Total Leads").getByText("1", { exact: true })).toBeVisible();
   const filters = page.getByRole("form", { name: "Management filters" });

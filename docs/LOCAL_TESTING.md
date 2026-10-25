@@ -8,14 +8,15 @@ environment. CI and Vercel execution are refused. Docker is not required.
 
 Before the first start, run `npm run build` and create the ignored file
 `.local/siteflow-test/admin.json` with your real `name`, `email`, Indian `mobile`
-and desired `username`. Do not put credentials in tracked source. Setup generates
-random auth/password secrets and creates the initial Super Admin through the same
+and Admin-selected `username` and `password` (at least 12 characters). Do not put
+credentials in tracked source. Setup generates only a random auth session secret
+and creates the initial Super Admin through the same
 Better Auth bootstrap service, with access to all three canonical companies.
 It runs the reviewed migration runner and seeds no customers, leads or orders.
 
-Open `.local/siteflow-test/ADMIN_LOGIN.txt` for the generated temporary login.
-First login requires a password change. The saved temporary password becomes
-obsolete afterward. Subsequent starts preserve users, password changes and CRM data;
+Open `.local/siteflow-test/ADMIN_LOGIN.txt` for the Admin-selected login.
+Sign in directly; no first-login password change is required. Subsequent starts
+preserve users, password changes and CRM data;
 they never reset or reprovision existing accounts. Admin can provision employees
 through the normal UI. No email or SMS is sent.
 

@@ -12,9 +12,9 @@ export function ChangePasswordForm() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <section className="w-full max-w-md rounded-2xl border bg-white p-8">
         <p className="text-xs font-semibold text-primary">SITEFLOW CRM · ACCOUNT SECURITY</p>
-        <h1 className="mt-4 text-2xl font-semibold">Make this password yours.</h1>
+        <h1 className="mt-4 text-2xl font-semibold">Change your password</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Set a new password before accessing your workspace. Use at least 12 characters.
+          You can update your password here. Use at least 12 characters.
         </p>
         <form
           className="my-7 space-y-5"

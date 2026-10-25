@@ -10,7 +10,7 @@ export function LoginForm() {
   const router = useRouter();
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <section className="hidden flex-col justify-between bg-primary p-14 text-white lg:flex">
+      <section className="hidden flex-col justify-between bg-[#20242d] p-14 text-white lg:flex">
         <div className="flex items-center gap-3 text-2xl font-semibold">
           <Sprout size={34} /> SiteFlow CRM
         </div>

@@ -14,6 +14,8 @@ export default defineConfig({
     env: {
       DATABASE_URL: "",
       DIRECT_URL: "",
+      DATABASE_SSL_CA: "",
+      VERCEL_OIDC_TOKEN: "",
       BETTER_AUTH_SECRET: "",
       BETTER_AUTH_URL: "http://127.0.0.1:3000",
       NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3000",

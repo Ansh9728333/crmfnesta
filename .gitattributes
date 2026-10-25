@@ -1,5 +1,7 @@
 # Migration hashes and generated auth schema must have stable bytes across hosts.
 * text=auto eol=lf
+# Applied SQL is hashed byte-for-byte; preserve its original reviewed line endings.
+drizzle/*.sql -text
 *.woff2 binary
 *.ttf binary
 *.png binary

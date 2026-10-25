@@ -148,6 +148,13 @@
       "when": 1792840639520,
       "tag": "0020_document-policy-snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792906990301,
+      "tag": "0021_admin-managed-passwords",
+      "breakpoints": true
     }
   ]
 }

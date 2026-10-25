@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CalendarClock, Leaf, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, type MetricTone } from "@/components/ui/metric-card";
 import { preSalesStages } from "@/lib/domain/workflows";
 import type { Directory, LeadList, Summary } from "@/features/leads/types";
 import { dateTime, money } from "@/features/leads/utils";
@@ -63,7 +64,7 @@ export function PreSalesOverview({
               Keep each enquiry connected to its customer, project and next action.
             </p>
           </div>
-          <Button asChild className="bg-[#dce9bf] text-primary hover:bg-[#e8f1d6]">
+          <Button asChild className="bg-white text-primary hover:bg-white/90">
             <Link href="/leads">
               Open sales pipeline <ArrowUpRight size={16} />
             </Link>
@@ -77,11 +78,15 @@ export function PreSalesOverview({
           ["Won", summary.won],
           ["Lost", summary.lost],
           ["Overdue follow-ups", summary.overdue],
-        ].map(([label, value]) => (
-          <section key={label} className="rounded-xl border bg-white p-5">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="mt-4 text-2xl font-semibold">{value}</p>
-          </section>
+        ].map(([label, value], index) => (
+          <MetricCard
+            key={label}
+            label={String(label)}
+            value={value}
+            icon={index === 4 ? CalendarClock : Users}
+            tone={(["blue", "amber", "green", "red", "red"] as MetricTone[])[index]}
+            solid
+          />
         ))}
       </div>
       <section className="overflow-hidden rounded-xl border bg-white">

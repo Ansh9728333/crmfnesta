@@ -16,8 +16,8 @@ import { createEmployeeSchema } from "../src/lib/auth/validation";
 const directory = resolve(".local/siteflow-test");
 const origin = "http://localhost:3000";
 const identitySchema = createEmployeeSchema
-  .pick({ name: true, email: true, mobile: true, username: true })
-  .extend({ password: z.string().min(12).optional(), authSecret: z.string().min(32).optional() });
+  .pick({ name: true, email: true, mobile: true, username: true, password: true })
+  .extend({ authSecret: z.string().min(32).optional() });
 
 async function main() {
   if (process.env.VERCEL || process.env.CI)
@@ -28,7 +28,7 @@ async function main() {
   const input = identitySchema.parse(JSON.parse(await readFile(configPath, "utf8")));
   const config = {
     ...input,
-    password: input.password ?? randomBytes(18).toString("base64url"),
+    password: input.password,
     authSecret: input.authSecret ?? randomBytes(48).toString("base64url"),
   };
   // Store secrets only in the explicitly ignored local test directory, never logs.
@@ -74,8 +74,8 @@ async function main() {
           "LOCAL TEST ACCOUNT ONLY",
           `URL: ${origin}/login`,
           `Username: ${config.username}`,
-          `Temporary password: ${config.password}`,
-          "Change this password at first login. After changing it, this temporary password no longer works.",
+          `Password: ${config.password}`,
+          "Sign in directly with the Admin-selected password. No first-login password change is required.",
           "No email or SMS was sent. Do not reuse this password outside this isolated test instance.",
         ].join("\n"),
         { mode: 0o600 },

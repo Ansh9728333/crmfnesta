@@ -6,7 +6,8 @@ import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requestJson, dateTime } from "@/features/leads/utils";
 import type { Notifications } from "./types";
-export function NotificationBell() {
+import { cn } from "@/lib/utils";
+export function NotificationBell({ className }: { className?: string }) {
   const [unread, setUnread] = useState<number | null>(null);
   const pathname = usePathname();
   useEffect(() => {
@@ -35,7 +36,10 @@ export function NotificationBell() {
     <Link
       href="/notifications"
       prefetch={false}
-      className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-xs hover:bg-muted"
+      className={cn(
+        "inline-flex items-center gap-2 rounded-md px-2 py-2 text-xs hover:bg-muted",
+        className,
+      )}
       aria-label={unread === null ? "Notifications" : `Notifications, ${unread} unread`}
     >
       <Bell size={16} />

@@ -23,7 +23,7 @@ async function main() {
     },
   );
   console.log(
-    "Initial administrator created. Sign in and change the password. Remove all BOOTSTRAP_* environment variables now.",
+    "Administrator created with the configured password. Remove all BOOTSTRAP_* environment variables now.",
   );
 }
 main()

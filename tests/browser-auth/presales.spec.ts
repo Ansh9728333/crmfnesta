@@ -16,7 +16,6 @@ test("creates, edits, assigns, filters and reloads persisted pre-sales records",
   const prefix = `PreSales ${testInfo.project.name}`,
     username = `leads.${testInfo.project.name}`,
     initialPassword = "Isolated-PreSales-Initial-123!",
-    changedPassword = "Isolated-PreSales-Changed-456!",
     mobile = testInfo.project.name === "desktop" ? "9876500101" : "9876500102";
   await signIn(page, browserAdmin.username, browserAdmin.password);
   await expect(page).toHaveURL("http://127.0.0.1:3100/");
@@ -119,8 +118,8 @@ test("creates, edits, assigns, filters and reloads persisted pre-sales records",
   await page.reload();
   await page.getByRole("button", { name: `Move ${prefix} Updated`, exact: true }).click();
   move = page.getByRole("dialog", { name: "Move lead", exact: true });
-  await move.getByRole("combobox",{name:"Stage",exact:true}).selectOption("7");
-  await move.getByRole("combobox",{name:"Outcome",exact:true}).selectOption("lost");
+  await move.getByRole("combobox", { name: "Stage", exact: true }).selectOption("7");
+  await move.getByRole("combobox", { name: "Outcome", exact: true }).selectOption("lost");
   await move.getByLabel("Lost reason", { exact: true }).fill("Customer postponed this project");
   await move.getByRole("button", { name: "Confirm stage change", exact: true }).click();
   await expect(move).not.toBeVisible();
@@ -136,11 +135,6 @@ test("creates, edits, assigns, filters and reloads persisted pre-sales records",
   });
   const employeePage = await employeeContext.newPage();
   await signIn(employeePage, username, initialPassword);
-  await expect(employeePage).toHaveURL(/\/change-password$/);
-  await employeePage.getByLabel("Current password", { exact: true }).fill(initialPassword);
-  await employeePage.getByLabel("New password", { exact: true }).fill(changedPassword);
-  await employeePage.getByLabel("Confirm new password", { exact: true }).fill(changedPassword);
-  await employeePage.getByRole("button", { name: "Change password", exact: true }).click();
   await expect(employeePage).toHaveURL("http://127.0.0.1:3100/");
   await employeePage.goto(detailUrl);
   await expect(

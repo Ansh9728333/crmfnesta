@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-export function LogoutButton() {
+export function LogoutButton({ className }: { className?: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -11,6 +11,7 @@ export function LogoutButton() {
       <Button
         size="sm"
         variant="outline"
+        className={className}
         disabled={pending}
         onClick={async () => {
           setPending(true);

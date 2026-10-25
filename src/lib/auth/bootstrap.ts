@@ -53,7 +53,7 @@ export async function bootstrapAdmin(
       employeeCode: "SF-000001",
       mobile: fields.mobile,
       department: "Administration",
-      mustChangePassword: true,
+      mustChangePassword: false,
     });
     for (const company of companies) {
       const [org] = await tx

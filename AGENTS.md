@@ -20,9 +20,12 @@ phase. Do not deploy, push, or provision external resources without authorizatio
 ## Security
 
 - No hardcoded credentials, fake APIs, fake mutation success, or invented records.
+- Admin chooses employee usernames, passwords and canonical designation/role assignments.
+  Do not generate temporary account passwords or require a first-login password change.
+  Password resets still revoke sessions; preserve authorization and password hashing.
 - Use Better Auth with Admin/Username plugins and Drizzle/Postgres.js. Do not use
   Supabase Auth or auth.uid(). Remove obsolete Supabase SSR authentication patterns.
-- Validate database-backed Better Auth sessions, active profiles, first-login state,
+- Validate database-backed Better Auth sessions, active profiles, credential policy,
   organization/branch role assignments and record permissions on every operation.
 - Public Auth routes are an explicit allowlist. Never expose Admin plugin endpoints,
   signup, user discovery or email login. Provision through the scoped server service.
