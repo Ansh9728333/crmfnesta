@@ -565,3 +565,10 @@ is still planned; its copy now directs users to implemented contextual uploads.
 The requested private Word guide documents modules, prerequisites, all 7/16 stages,
 quotations, loads, payments, aftercare, Help, permissions, testing and limitations.
 No credentials or real customer information belong in the published source/manual.
+
+Validation: lint and TypeScript pass, 49 unit tests and 69 isolated database tests
+pass, production build passes, and 10 public plus 18 authenticated desktop/mobile
+browser cases pass. Two focused pre-sales browser cases additionally verify the
+selected-customer request returns HTTP 200. Release `45dc445` is live; read-only
+desktop/mobile checks confirm automatic options and scoped linked-name lookup.
+Production verification submitted no CRM forms and changed no customer records.

@@ -157,3 +157,22 @@ so existing role settings remain editable. Isolated browser fixtures include tho
 legacy grant rows; four focused desktop/mobile Help/Admin checks pass after the
 full local quality suite. Final live Help form checks pass again without submission.
 No production permissions, credentials or CRM records were changed for testing.
+
+## Customer picker review and operating guide
+
+Application release `45dc445` is live at the existing domain as
+`dpl_8nyvcgbJAicgixQRdBxn1HpHudZr` (unique deployment:
+https://crmfnesta-fxa5ptiaf-bajrangs-projects-fe910f90.vercel.app).
+Add Project now loads permitted customers automatically, preserves the actual
+selected customer's name, and explains empty/search states. Exact customer-ID
+queries retain the existing record-scope predicate. No schema changes were needed.
+
+Local lint, TypeScript, 49 unit, 69 isolated database, 10 public and 18 authenticated
+browser checks plus production build pass. Two focused pre-sales browser cases
+also pass. Read-only live desktop/mobile checks confirm automatic options match
+real API counts and linked-name queries are scoped and successful. No production
+records were submitted or changed. The private Hindi Word guide covers the complete
+operating sequence and remaining work; it is excluded from Git and deployments.
+The standalone Documents index remains planned; contextual private uploads exist.
+Hosted CI for the exact application release also passed:
+https://github.com/Ansh9728333/crmfnesta/actions/runs/40181987915.
