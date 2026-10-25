@@ -1,0 +1,1 @@
+ALTER TABLE "documents" ADD CONSTRAINT "documents_order_id_stage_number_organization_id_order_stages_order_id_number_organization_id_fk" FOREIGN KEY ("order_id","stage_number","organization_id") REFERENCES "public"."order_stages"("order_id","number","organization_id") ON DELETE no action ON UPDATE no action;

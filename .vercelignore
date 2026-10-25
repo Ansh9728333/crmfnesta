@@ -1,0 +1,13 @@
+# Local databases, account details and secrets must never be uploaded by CLI.
+.local/
+.env*
+*.pem
+*.key
+
+# Generated output and local-only test infrastructure.
+test-results/
+playwright-report/
+coverage/
+tests/
+scripts/local-test-server.ts
+*.tsbuildinfo

@@ -1,0 +1,153 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792819337119,
+      "tag": "0000_busy_starfox",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792819644207,
+      "tag": "0001_security-boundary",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792823801732,
+      "tag": "0002_presales",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792824315852,
+      "tag": "0003_presales-relationships",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792824320181,
+      "tag": "0004_presales-security",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792826188495,
+      "tag": "0005_presales-workflows",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792826220137,
+      "tag": "0006_presales-workflow-security",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792826340572,
+      "tag": "0007_quotation-item-order",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792828058306,
+      "tag": "0008_visit-attachment-scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792828626833,
+      "tag": "0009_post-sales-engine",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792828732392,
+      "tag": "0010_post-sales-security",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792828795989,
+      "tag": "0011_order-document-stage-scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792831265669,
+      "tag": "0012_production-load-planning",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792831280803,
+      "tag": "0013_allocation-guards",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792832702825,
+      "tag": "0014_payments-dispatch-delivery",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792832736888,
+      "tag": "0015_commerce-integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792835878880,
+      "tag": "0016_installation-aftercare",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792835881759,
+      "tag": "0017_aftercare-integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792839261540,
+      "tag": "0018_management-reporting",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792839307609,
+      "tag": "0019_management-security",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792840639520,
+      "tag": "0020_document-policy-snapshots",
+      "breakpoints": true
+    }
+  ]
+}
