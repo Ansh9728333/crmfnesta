@@ -97,6 +97,19 @@ test("Admin provisions and manages an employee through real authenticated UI", a
   await employeePage.goto("/");
   await expect(employeePage).toHaveURL(/\/login/);
   await employeeContext.close();
+  await page.getByRole("button", { name: "Permissions", exact: true }).click();
+  const permissionsDialog = page.getByRole("dialog", { name: "Role permissions", exact: true });
+  await permissionsDialog
+    .getByLabel("Permission organization")
+    .selectOption({ index: testInfo.project.name === "desktop" ? 0 : 1 });
+  await permissionsDialog.getByLabel("Permission role").selectOption("Service Engineer");
+  await expect(
+    permissionsDialog.getByRole("checkbox", { name: "help.resolve", exact: true }),
+  ).toHaveCount(0);
+  await permissionsDialog.getByRole("button", { name: "Review permissions", exact: true }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click();
+  await expect(permissionsDialog).not.toBeVisible();
+  await expect(page.getByText("Role permissions updated.", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
 });

@@ -530,3 +530,11 @@ by assigned Accounts staff and previous-version inserts during rolling deploymen
 Screenshots reviewed. Live migrations 0024/0025 applied; all 26 hashes match, all
 57 tables retain RLS/browser denial and both private Storage guards are present.
 Source publication and application rollout follow; no production fixtures used.
+
+Phase 12 initial rollout completed: 4e23d47 is pushed/deployed at the existing URL
+as dpl_DNgMUSN4i6JCn9qyHbpMMRkDECpX; its full hosted CI passed. Live desktop/mobile
+questions, editable location, real company client/employee option counts, immutable
+submitter and notification query pass. General auth/security smoke checks pass.
+An additional compatibility review found retired permission strings could remain
+in the Admin editor's hidden selection. A small follow-up filters them out and adds
+browser coverage with seeded legacy grants; final follow-up verification follows.

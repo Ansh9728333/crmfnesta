@@ -2,9 +2,9 @@
 
 Date: 25 October 2026. Status: **LIVE — production build and HTTPS/auth checks passed**.
 
-Deployed application release: `ba0f4b7` — general Help Tickets, building on the
-previous `417871d` theme/account release.
-Vercel deployment: `dpl_B2iYyas1Uo7u97wELYUJLznk5bLW`.
+Deployed application release: `4e23d47` — complete visible Help intake, shared company
+client/employee choices and typed locations, building on `ba0f4b7`.
+Vercel deployment: `dpl_DNgMUSN4i6JCn9qyHbpMMRkDECpX`.
 
 | Resource                | Target                                             |
 | ----------------------- | -------------------------------------------------- |
@@ -25,8 +25,8 @@ are provided only in the ignored local production account file.
 
 ## Verified infrastructure
 
-- Initial public schema was empty. Applied reviewed migrations 0000–0023 through
-  the migration runner, then verified all 24 ledger hashes against source bytes.
+- Initial public schema was empty. Applied reviewed migrations 0000–0025 through
+  the migration runner, then verified all 26 ledger hashes against source bytes.
   Migration 0021 retires legacy first-login flags with immutable policy audits and
   preserves credential hashes. SQL bytes are preserved in Git across checkouts.
 - Verified database TLS chain/hostname using the Supabase Root 2021 CA. Server
@@ -120,3 +120,29 @@ access stays with sales intake/service resolution roles, and Admin controls othe
 grants. Existing passwords were not changed. Automatic external messaging, orphan
 upload cleanup and malware scanning are not implemented; see HELP_TICKETS.md.
 Operational recovery/performance/credential-rotation items above remain applicable.
+
+## Help intake refinement — 25 October 2026
+
+Release `4e23d47` is live at the existing domain, with unique deployment
+https://crmfnesta-9ucuyxmnc-bajrangs-projects-fe910f90.vercel.app.
+Its full hosted CI passed:
+https://github.com/Ansh9728333/crmfnesta/actions/runs/40178307020.
+Lint, TypeScript, 49 unit, 68 isolated database, 10 public and 18 authenticated
+browser checks plus production build pass. Focused database tests also cover
+assigned Accounts proof uploads and legacy-version inserts during rolling release.
+
+Migrations 0024/0025 add immutable typed locations and allow customer-only intake.
+All 26 hashes match; 57-table RLS, revoked browser grants and both private Storage
+guards remain verified. No broad role grants or new branches were created. Help
+intake exposes minimal name/mobile/project context for all clients in an authorized
+company. Other CRM record permissions stay independent. All active company employees
+can be selected; a named assignment authorizes only that ticket. The actual session
+submitter and independent confirmation requirements remain enforced.
+
+Live desktop/mobile checks pass: every question exists before client selection,
+location accepts typed input, client/employee option counts match real scoped
+Supabase responses, submitter is readonly, and notifications query succeeds. General
+login/Admin/security headers/logout checks also pass. Verification never submitted
+a Help form or created/changed production CRM/customer/employee records. A 340-file
+source secret scan and staged SQL-byte check passed; the Vercel manifest excludes
+local credentials/databases/tests (307 regular application files).

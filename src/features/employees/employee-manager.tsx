@@ -744,7 +744,8 @@ function PermissionForm({
   const grants = (organizationId: string, selectedRole: Role) =>
     directory.permissions
       .filter((p) => p.organizationId === organizationId && p.role === selectedRole)
-      .map((p) => p.permission as Permission);
+      .map((p) => p.permission as Permission)
+      .filter((permission) => permissions.includes(permission));
   const [selected, setSelected] = useState<Permission[]>(grants(org, role));
   const [pending, setPending] = useState(false);
   const [confirming, setConfirming] = useState(false);

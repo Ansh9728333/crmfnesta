@@ -156,6 +156,17 @@ async function main() {
       siteAddress: "Isolated cross-employee help lookup site",
     }),
   );
+  // Model an existing installation upgraded from the retired Help role toggle.
+  await db
+    .insert(schema.rolePermissions)
+    .values(
+      (await db.select().from(schema.organizations)).map((o) => ({
+        organizationId: o.id,
+        role: "Service Engineer" as const,
+        permission: "help.resolve",
+      })),
+    )
+    .onConflictDoNothing();
   await client.end();
   const app = spawn(
     process.execPath,
