@@ -538,3 +538,12 @@ submitter and notification query pass. General auth/security smoke checks pass.
 An additional compatibility review found retired permission strings could remain
 in the Admin editor's hidden selection. A small follow-up filters them out and adds
 browser coverage with seeded legacy grants; final follow-up verification follows.
+
+Phase 12 completed: compatibility follow-up c17d8f0 is pushed and deployed as
+dpl_7BG8XQ6GTwjA3HULd8TM1eBkKpyN at the existing production URL. Lint, TypeScript,
+49 unit, 68 database tests and production build pass; focused desktop/mobile Help
+and employee checks pass with historical permission rows. The final release's full
+hosted CI passed, including all public/authenticated browser regressions. Final
+read-only production form/real dropdown/typing/identity/notification checks pass.
+All original questions are present before client selection. Live CRM records,
+employee assignments, credentials and role grants were not changed during testing.

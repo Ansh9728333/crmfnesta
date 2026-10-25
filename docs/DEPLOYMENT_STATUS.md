@@ -2,9 +2,9 @@
 
 Date: 25 October 2026. Status: **LIVE — production build and HTTPS/auth checks passed**.
 
-Deployed application release: `4e23d47` — complete visible Help intake, shared company
-client/employee choices and typed locations, building on `ba0f4b7`.
-Vercel deployment: `dpl_DNgMUSN4i6JCn9qyHbpMMRkDECpX`.
+Deployed application release: `c17d8f0` — complete visible Help intake and Admin
+permission compatibility (main feature `4e23d47`, building on `ba0f4b7`).
+Vercel deployment: `dpl_7BG8XQ6GTwjA3HULd8TM1eBkKpyN`.
 
 | Resource                | Target                                             |
 | ----------------------- | -------------------------------------------------- |
@@ -146,3 +146,14 @@ login/Admin/security headers/logout checks also pass. Verification never submitt
 a Help form or created/changed production CRM/customer/employee records. A 340-file
 source secret scan and staged SQL-byte check passed; the Vercel manifest excludes
 local credentials/databases/tests (307 regular application files).
+
+Final compatibility follow-up `c17d8f0` is deployed as
+`dpl_7BG8XQ6GTwjA3HULd8TM1eBkKpyN` at the existing URL (unique deployment:
+https://crmfnesta-gngywlggf-bajrangs-projects-fe910f90.vercel.app).
+Its full hosted CI passed:
+https://github.com/Ansh9728333/crmfnesta/actions/runs/40179101138.
+Retired permission strings are filtered from the Admin editor's hidden selection,
+so existing role settings remain editable. Isolated browser fixtures include those
+legacy grant rows; four focused desktop/mobile Help/Admin checks pass after the
+full local quality suite. Final live Help form checks pass again without submission.
+No production permissions, credentials or CRM records were changed for testing.

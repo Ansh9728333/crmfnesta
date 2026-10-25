@@ -103,3 +103,12 @@ Release ba0f4b7: all local quality checks and complete hosted CI pass (49 unit,
 schema hashes/RLS/grants, direct 10 MiB private Storage capabilities, scoped real
 read queries and desktop/mobile forms are verified. Production lifecycle/customer
 acceptance is intentionally not simulated using fabricated customer records.
+
+Refinement release c17d8f0 (main feature 4e23d47): questions remain visible before
+client selection, location supports typed input, and all active company employees
+and company clients load from the scoped database. Customer-only submissions are
+supported. Lint, TypeScript, 49 unit/68 database tests, production build, full hosted
+CI and desktop/mobile checks pass. Private proof uploads by assigned Accounts staff,
+rolling-version inserts and Admin editing with legacy permission entries are covered.
+Live option counts match real Supabase responses; no production Help form was
+submitted and no customer/employee records were changed during verification.
