@@ -20,9 +20,11 @@ const instructions = [
 export function StageCompletion({
   lead,
   onCompleted,
+  onNavigate,
 }: {
   lead: { id: string; stage: number; version: number; clientName: string | null };
   onCompleted?: () => void | Promise<void>;
+  onNavigate?: (tab: string) => void;
 }) {
   const router = useRouter();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -32,7 +34,17 @@ export function StageCompletion({
   if (lead.stage >= 6)
     return (
       <Button asChild size="sm" variant="outline">
-        <Link href={`/leads/${lead.id}/presales?tab=conversion`}>Done · confirm Won / Lost</Link>
+        <Link
+          href={`/leads/${lead.id}/presales?tab=conversion`}
+          onClick={(event) => {
+            if (onNavigate) {
+              event.preventDefault();
+              onNavigate("conversion");
+            }
+          }}
+        >
+          Done · confirm Won / Lost
+        </Link>
       </Button>
     );
   return (
@@ -77,6 +89,15 @@ export function StageCompletion({
           <Button asChild variant="ghost">
             <Link
               href={`/leads/${lead.id}/presales?tab=${lead.stage === 4 ? "quotations" : lead.stage === 5 ? "engagements" : "visits"}`}
+              onClick={(event) => {
+                if (onNavigate) {
+                  event.preventDefault();
+                  setOpen(false);
+                  onNavigate(
+                    lead.stage === 4 ? "quotations" : lead.stage === 5 ? "engagements" : "visits",
+                  );
+                }
+              }}
             >
               Open step details
             </Link>

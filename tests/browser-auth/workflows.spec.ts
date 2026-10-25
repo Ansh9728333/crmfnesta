@@ -118,7 +118,11 @@ test("records visits, immutable quotations, showroom, negotiation and Won/Lost c
   await expect(
     page.getByRole("heading", { name: "Final offer agreed", exact: true }),
   ).toBeVisible();
-  await page.getByRole("tab", { name: "Order conversion", exact: true }).click();
+  await page.getByRole("link", { name: "Done · confirm Won / Lost", exact: true }).click();
+  await expect(page.getByRole("tab", { name: "Order conversion", exact: true })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   await page.getByLabel("Confirm selected company", { exact: true }).selectOption(org.id);
   const workflow = await (await context.request.get(`/api/leads/${id}/presales`)).json();
   await page

@@ -205,6 +205,10 @@ export function PresalesWorkspace({
     ["engagements", "Showroom & negotiation", Handshake],
     ["conversion", "Order conversion", MapPin],
   ] as const;
+  function openTab(next: string) {
+    setTab(next);
+    window.history.replaceState(null, "", `?tab=${next}`);
+  }
   return (
     <div className="space-y-6">
       {state.canWrite && (
@@ -215,7 +219,7 @@ export function PresalesWorkspace({
               Save the step details below, then mark Done to start the next step automatically.
             </p>
           </div>
-          <StageCompletion lead={lead} onCompleted={() => reload(1)} />
+          <StageCompletion lead={lead} onCompleted={() => reload(1)} onNavigate={openTab} />
         </section>
       )}
       <header className="flex flex-wrap items-start justify-between gap-4">

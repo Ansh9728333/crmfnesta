@@ -176,3 +176,24 @@ operating sequence and remaining work; it is excluded from Git and deployments.
 The standalone Documents index remains planned; contextual private uploads exist.
 Hosted CI for the exact application release also passed:
 https://github.com/Ansh9728333/crmfnesta/actions/runs/40181987915.
+
+## Done-driven pre-sales progression
+
+Core release `0a61856` is live as `dpl_B2GyDAus6GRUvWmK3FqxduUWHsye`, with
+unique deployment https://crmfnesta-az6gsew7w-bajrangs-projects-fe910f90.vercel.app.
+Its complete hosted CI passed:
+https://github.com/Ansh9728333/crmfnesta/actions/runs/40187818380.
+
+Move, drag/drop and editable stage/outcome fields are replaced by current-step Done.
+Appointment, measurement, issued quotation and showroom evidence gates are checked
+transactionally with current version/scope; one completion starts only one next
+step. Actual completions show actor/time in Lead details and immutable history.
+Free-text notes cannot forge completion status. Won/Lost retains existing guards.
+No database migration or historical completion backfill is required.
+
+Lint, TypeScript, 49 unit, 70 isolated database, 10 public and all 18 authenticated
+browser scenarios pass (the two pre-sales label assertions passed on focused rerun;
+the core's full hosted run also passed). Live desktop/mobile checks confirm removed
+controls, current-step dialog and keyboard focus, without submitting any CRM form.
+The small follow-up uses the workspace tab callback for Done navigation, preserving
+draft form state; both complete quotation/Won browser cases pass on desktop/mobile.

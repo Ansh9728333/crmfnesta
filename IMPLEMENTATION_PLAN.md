@@ -594,4 +594,10 @@ assertion. After correcting that assertion, both desktop/mobile cases pass on
 rerun, including every Done transition, blocked incomplete work, five persisted
 Done records, Lost closure and customer/project persistence. Completion status is
 read from typed audited operations, never inferred from a free-text Done note.
-Final dialog keyboard-focus verification and production rollout follow.
+Core release `0a61856` is live and its complete hosted CI passed. Read-only live
+desktop/mobile checks confirm Move/drag removal, disabled stage editing, Done
+dialog and Escape/Enter focus restoration without submitting any real lead.
+The final same-page navigation callback opens step details or conversion without
+resetting existing form state. Both desktop/mobile quotation-to-Won browser cases
+pass again, including clicking Done to open conversion. Final follow-up rollout
+is recorded in docs/DEPLOYMENT_STATUS.md.
