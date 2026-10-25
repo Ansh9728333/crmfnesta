@@ -83,3 +83,9 @@ filtering/pagination, policy snapshots, verified evidence and immutable history.
 Desktop/mobile browser tests use separate real database-backed creator/resolver
 sessions, reload persistence, project context and drawer keyboard focus. Test
 fixtures are never seeded into the production Supabase database.
+
+Release ba0f4b7: all local quality checks and complete hosted CI pass (49 unit,
+66 isolated database, 10 public browser, 18 authenticated browser checks). Live
+schema hashes/RLS/grants, direct 10 MiB private Storage capabilities, scoped real
+read queries and desktop/mobile forms are verified. Production lifecycle/customer
+acceptance is intentionally not simulated using fabricated customer records.

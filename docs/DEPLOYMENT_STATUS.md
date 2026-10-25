@@ -2,9 +2,9 @@
 
 Date: 25 October 2026. Status: **LIVE — production build and HTTPS/auth checks passed**.
 
-Deployed application release: `417871d` (theme/account changes in `b5d5791`, followed
-by a confirmation-message clarification).
-Vercel deployment: `dpl_3AwgW6PnF2HwG2hQiMG3uAhYfPUp`.
+Deployed application release: `ba0f4b7` — general Help Tickets, building on the
+previous `417871d` theme/account release.
+Vercel deployment: `dpl_B2iYyas1Uo7u97wELYUJLznk5bLW`.
 
 | Resource                | Target                                             |
 | ----------------------- | -------------------------------------------------- |
@@ -25,14 +25,14 @@ are provided only in the ignored local production account file.
 
 ## Verified infrastructure
 
-- Initial public schema was empty. Applied reviewed migrations 0000–0021 through
-  the migration runner, then verified all 22 ledger hashes against source bytes.
+- Initial public schema was empty. Applied reviewed migrations 0000–0023 through
+  the migration runner, then verified all 24 ledger hashes against source bytes.
   Migration 0021 retires legacy first-login flags with immutable policy audits and
   preserves credential hashes. SQL bytes are preserved in Git across checkouts.
 - Verified database TLS chain/hostname using the Supabase Root 2021 CA. Server
   verification remains enabled for both migration and transaction-pooler clients.
-- All 53 application tables enable RLS, browser roles have no effective grants,
-  and Storage has the restrictive server-only policy.
+- All 57 application tables enable RLS, browser roles have no effective grants,
+  and both document/Help buckets have restrictive server-only policies.
 - Real private bucket upload, anonymous denial and short-lived signed download
   preserve PDF bytes. The unique infrastructure probe was removed afterward;
   no customer documents were created, changed or deleted.
@@ -85,3 +85,38 @@ designation edits still revoke sessions. No lead/order/customer test records wer
 inserted into production. Full live business acceptance and the operational items
 above remain outstanding. Subsequent documentation-only commits do not change the
 deployed application; Git-based automatic deployment is not connected yet.
+
+## Help Tickets release — 25 October 2026
+
+Approved feature commit `ba0f4b7` is pushed to main and deployed at the existing
+production domain. Unique deployment:
+https://crmfnesta-pbvcxopis-bajrangs-projects-fe910f90.vercel.app.
+Vercel reports READY; production HTTPS verification returns the real sign-in page.
+The deployed commit's complete hosted CI passed:
+https://github.com/Ansh9728333/crmfnesta/actions/runs/40175970887.
+
+- Local lint, TypeScript, 49 unit, 66 isolated database, 10 public browser and 18
+  authenticated desktop/mobile browser checks pass; production build passes.
+- Live migration preflight verified the unchanged previous 22 hashes; additive
+  0022/0023 applied with all 24 hashes matching. All 57 tables have RLS and browser
+  grants are revoked. Both restrictive private Storage policies are present.
+- Separate private 10 MiB Help bucket configured. Real direct signed 10 MiB upload,
+  overwrite denial, byte integrity, signed download, anonymous denial and oversize
+  rejection pass. Unique infrastructure objects were removed in finally.
+- A 336-file source secret scan passed. Staged new SQL bytes match their applied
+  artifacts. Vercel manifest includes 303 regular files and empty directory markers;
+  local secrets/databases, environment files and test contents are excluded.
+- Live existing-password login, anonymous Help API denial, real Supabase ticket
+  list/source queries, scoped Admin concern settings, private no-store/CSP, and
+  desktop/mobile Help pages/empty create forms pass. Existing general auth/security,
+  optional own-password and sign-out/revocation checks remain successful.
+- No production employee, customer, lead, project, order or ticket test fixture was
+  created or modified. Full lifecycle writes were exercised in isolated databases;
+  customer-specific live business acceptance remains an operator task.
+
+The module is first in Workspace, above Projects. Help is available before and
+after an order; existing handover-only service tickets retain their gates. Default
+access stays with sales intake/service resolution roles, and Admin controls other
+grants. Existing passwords were not changed. Automatic external messaging, orphan
+upload cleanup and malware scanning are not implemented; see HELP_TICKETS.md.
+Operational recovery/performance/credential-rotation items above remain applicable.

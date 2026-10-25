@@ -15,7 +15,7 @@ and supplying the ignored administrator identity. This opt-in test harness is no
 a production database fallback; Supabase Storage is unavailable in that mode.
 
 Live application: [SiteFlow CRM](https://crmfnesta.vercel.app), deployed on
-25 October 2026, updated to application release 417871d with the charcoal/colour
+25 October 2026, updated to application release ba0f4b7 with Help Tickets, the charcoal/colour
 dashboard theme and Admin-selected login passwords/designations. Supabase migration/TLS/RLS,
 private Storage, production auth and desktop/mobile login checks are verified.
 See [deployment record](docs/DEPLOYMENT_STATUS.md) and

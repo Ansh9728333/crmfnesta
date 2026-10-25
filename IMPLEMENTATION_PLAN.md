@@ -494,3 +494,13 @@ Live Storage verification passes: actual 10 MiB direct signed upload, immutable-
 overwrite denial, exact byte integrity, private signed download, anonymous denial,
 oversized upload rejection and cleanup of the unique infrastructure probes. No
 production CRM/customer/employee fixtures were inserted or modified.
+
+Phase 11 rollout completed: release ba0f4b7 is pushed to the authorized GitHub main
+branch and deployed as dpl_B2iYyas1Uo7u97wELYUJLznk5bLW at the existing production
+URL. The exact deployed commit's full hosted CI is successful. Live existing-login,
+Help API/list/source queries, scoped concern settings, private no-store/CSP and
+desktop/mobile empty-form checks pass. General authentication/revocation smoke
+checks also pass. No production customer/employee/ticket test fixtures were created
+or changed. Remaining operator work: customer-specific live business acceptance,
+abandoned-upload cleanup policy, optional malware scanning, and the previously
+documented backup/recovery/performance operations. See docs/DEPLOYMENT_STATUS.md.
