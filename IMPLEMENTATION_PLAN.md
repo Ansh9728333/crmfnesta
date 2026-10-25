@@ -365,6 +365,27 @@ auth/database secrets, private keys or token patterns. Source publication and
 Vercel deployment are next; replacement Storage key is still pending. No test data
 or local administrator password has been copied to the live project.
 
+Release progress continued: source commit 2efe880 was pushed to the selected main
+branch and hosted full CI passed. The signed-in Vercel workspace created crmfnesta;
+its verified default domain is crmfnesta.vercel.app. Configured eight production
+variables through stdin without exposing values in argv/logs, excluding DIRECT_URL
+and bootstrap variables. Singapore region is selected to match the Supabase pooler.
+Vercel's GitHub integration needs an account login connection, so deployment will
+use the authenticated CLI while source remains versioned on GitHub.
+
+The user explicitly approved the live all-company Super Admin, provisioned through
+Better Auth with a new random password and first-login change. The local test
+password and customer/order fixtures were not copied. The user repeated the supplied
+legacy Storage key after the exposure warning and directed setup to continue; it is
+kept only in ignored local configuration and Vercel's production secret storage.
+Live private Storage upload, anonymous-access denial and signed byte integrity pass;
+the unique non-customer probe was removed. Credential rotation remains recommended.
+Read-only checks confirm 21 applied migration hashes, 53 RLS-enabled tables, no
+effective browser table grants and the restrictive private-bucket policy. A Vercel
+dry-run manifest excludes all local data/secrets and test infrastructure. Fresh lint,
+TypeScript and 45 unit tests pass; the first pushed commit's full hosted CI also
+ran integration/browser/build checks successfully. Production deployment follows.
+
 Phase 5 verification, 24 October 2026: lint, TypeScript and production build pass;
 24 unit tests, 43 isolated database integration tests, 8 public browser checks and
 10 authenticated desktop/mobile browser tests pass. Single/multiple loads, 40-item

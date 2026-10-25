@@ -4,8 +4,16 @@ Status: **release preparation in progress**. Every unchecked item needs evidence
 The user authorized Supabase/Vercel live deployment and source push on 25 October 2026. The selected GitHub repository is Ansh9728333/crmfnesta. Supabase connectivity
 was verified with its trusted CA and certificate verification enabled; the initial
 public schema was empty. Reviewed migrations 0000–0020 have now been applied.
-Vercel CLI authentication is complete. Source push and deployment are still pending.
-The exposed legacy Storage key was not saved or used; replacement remains required.
+Vercel CLI authentication is complete; source is pushed to Ansh9728333/crmfnesta
+and main-branch hosted CI passed. Vercel project crmfnesta and its production
+environment are configured. Live administrator provisioning was separately approved
+by the user and completed through Better Auth with a new password. Real private
+Storage upload, anonymous denial and signed byte-preserving download were verified;
+only the unique infrastructure probe was removed. Deployment itself remains pending.
+After the warning, the user explicitly supplied the same legacy server key again
+and directed setup to continue. It is stored only in ignored local configuration
+and a Vercel production secret. Rotation/retirement of chat-shared database and
+server credentials remains recommended and has not been performed.
 Use this alongside PRODUCTION_READINESS_AUDIT.md and the phase-specific guides.
 Do not put credentials, database dumps, signed URLs or customer screenshots in PRs.
 
