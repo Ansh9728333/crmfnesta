@@ -398,8 +398,9 @@ export function EmployeeManager({
                   : "Revoke employee sessions?"}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This affects {confirm?.employee.name}. Active sessions will be revoked. The employee can
-            sign in directly with the password you set.
+            This affects {confirm?.employee.name}. Active sessions will be revoked.
+            {confirm?.action === "reset-password" &&
+              " The employee can sign in directly with the password you set."}
           </AlertDialogDescription>
           <form
             onSubmit={async (event) => {
