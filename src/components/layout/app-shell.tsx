@@ -37,6 +37,7 @@ type Employee = {
 };
 
 const icons = {
+  "help-tickets": CircleHelp,
   leads: Users,
   customers: ClipboardList,
   projects: Layers3,

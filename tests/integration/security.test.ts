@@ -119,7 +119,10 @@ describe("real PostgreSQL authentication and authorization", () => {
       .update(schema.employeeProfiles)
       .set({ mustChangePassword: true })
       .where(eq(schema.employeeProfiles.userId, administrator.user.id));
-    const migration = readMigrationFiles({ migrationsFolder: "./drizzle" }).at(-1)!;
+    // Pin the policy migration by its audited operation, not its current journal position.
+    const migration = readMigrationFiles({ migrationsFolder: "./drizzle" }).find((m) =>
+      m.sql.some((statement) => statement.includes("employee.password-policy-updated")),
+    )!;
     await db.transaction(async (transaction) => {
       for (const statement of migration.sql) await transaction.execute(sql.raw(statement));
     });
@@ -393,6 +396,14 @@ describe("real PostgreSQL authentication and authorization", () => {
     try {
       await expect(pg.query('SELECT * FROM public."user"')).rejects.toThrow();
       await expect(pg.query("SELECT * FROM public.customers")).rejects.toThrow();
+      for (const table of [
+        "help_tickets",
+        "help_ticket_events",
+        "help_ticket_files",
+        "help_concern_policies",
+      ]) {
+        await expect(pg.query(`SELECT * FROM public.${table}`)).rejects.toThrow();
+      }
     } finally {
       await pg.exec("RESET ROLE");
     }
@@ -404,7 +415,7 @@ describe("real PostgreSQL authentication and authorization", () => {
   });
   it("denies direct browser access to the private bucket even with an existing permissive policy", async () => {
     await pg.exec(
-      "INSERT INTO storage.objects(bucket_id) VALUES ('siteflow-documents'), ('unrelated-test-bucket')",
+      "INSERT INTO storage.objects(bucket_id) VALUES ('siteflow-documents'), ('siteflow-help-ticket-files'), ('unrelated-test-bucket')",
     );
     await pg.exec("SET ROLE anon");
     try {
@@ -412,6 +423,16 @@ describe("real PostgreSQL authentication and authorization", () => {
         (await pg.query("SELECT * FROM storage.objects WHERE bucket_id = 'siteflow-documents'"))
           .rows,
       ).toHaveLength(0);
+      expect(
+        (
+          await pg.query(
+            "SELECT * FROM storage.objects WHERE bucket_id = 'siteflow-help-ticket-files'",
+          )
+        ).rows,
+      ).toHaveLength(0);
+      await expect(
+        pg.exec("INSERT INTO storage.objects(bucket_id) VALUES ('siteflow-help-ticket-files')"),
+      ).rejects.toThrow();
       expect(
         (await pg.query("SELECT * FROM storage.objects WHERE bucket_id = 'unrelated-test-bucket'"))
           .rows,

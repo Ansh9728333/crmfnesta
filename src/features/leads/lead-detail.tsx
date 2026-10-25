@@ -92,6 +92,9 @@ export function LeadDetailView({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
+            <Link href={`/help-tickets?kind=lead&sourceId=${lead.id}`}>Raise Help Ticket</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
             <Link href={`/leads/${lead.id}/presales`}>Pre-sales workspace</Link>
           </Button>
           {!fullPage && (

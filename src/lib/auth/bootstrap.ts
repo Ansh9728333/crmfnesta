@@ -79,6 +79,17 @@ export async function bootstrapAdmin(
               defaults[role].map((permission) => ({ organizationId: org.id, role, permission })),
             );
       }
+      const { helpConcernPolicies } = await import("../db/schema");
+      const { defaultConcerns } = await import("../help-tickets/validation");
+      await tx
+        .insert(helpConcernPolicies)
+        .values(
+          defaultConcerns.map((name) => ({
+            organizationId: org.id,
+            code: name.toLowerCase().replaceAll(" ", "_"),
+            name,
+          })),
+        );
       await tx.insert(auditLogs).values({
         actorId: created.user.id,
         organizationId: org.id,

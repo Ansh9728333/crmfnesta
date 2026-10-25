@@ -118,6 +118,7 @@ export const catalogSchema = z.object({
   notes: z.string().trim().min(3).max(2000),
 });
 export const notificationKinds = [
+  "help_ticket",
   "follow_up",
   "production",
   "payment",

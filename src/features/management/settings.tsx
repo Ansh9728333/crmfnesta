@@ -41,6 +41,7 @@ export function AdminSettings({ data: d }: { data: SettingsData }) {
       <nav className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Employees", "/admin/employees"],
+          ["Help Ticket settings", "/help-tickets/settings"],
           ["Roles and permissions", "/admin/employees?panel=permissions"],
           ["Workflow stage settings", "/orders/settings"],
           ["Order payment milestones", "/payments"],

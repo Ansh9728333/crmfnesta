@@ -83,8 +83,8 @@ export function NotificationCenter({ data: d, unread }: { data: Notifications; u
         </p>
         <h1 className="mt-2 text-3xl font-semibold">Notifications</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Overdue follow-ups, production, contractual payments, installation and audit tasks. Alerts
-          resolve when their source work is completed.
+          Help tickets and confirmations, overdue follow-ups, production, payments, installation and
+          audit tasks. Alerts resolve when their source work is completed.
         </p>
       </header>
       <form className="flex items-center gap-4 rounded-xl border bg-white p-4">

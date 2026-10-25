@@ -453,3 +453,44 @@ temporary credential is generated. No production employee/customer/order test re
 was created or changed. Private login instructions were relabelled without changing
 the saved password. The final deployed release's hosted CI is successful; updated
 release evidence is in docs/DEPLOYMENT_STATUS.md.
+
+## Phase 11 — General Help Tickets
+
+User approved contextual Lead/Project intake, assigned resolver panel, independent
+creator confirmation, rejected resolution/reopening, private supporting evidence,
+Admin concern/SLA settings and immutable history. The shared module is separate
+from existing after-handover service tickets and supports all three companies.
+
+Implementation: first Workspace navigation item; create dialog; scoped list/tabs,
+filters/pagination and counts; detail drawer/full page; resolve/confirm/reopen;
+Admin reassignment and concern/evidence/SLA settings; real notification tasks;
+four RLS-protected tables with reviewed migrations 0022/0023. Uploads go directly
+to a separate private 10 MiB bucket, with server-side verification and transactional
+claiming. Default permissions are limited to existing sales intake/service roles;
+other role grants remain Admin-controlled. See docs/HELP_TICKETS.md.
+
+Acceptance: real database persistence before handover; accurate source/creator;
+no unauthorized branch/employee access; independent confirmation including a
+separate Admin for self-assignment; all attempts survive reopening; stale and
+duplicate submissions prevented; private valid evidence only; responsive and
+keyboard-accessible forms/drawer; all regression checks. Validation/rollout
+evidence will be recorded after completion.
+
+Phase 11 verification: lint, TypeScript, 49 unit tests, 66 isolated database tests,
+10 public browser checks, 18 authenticated desktop/mobile checks and the production
+build pass. A focused Help Ticket browser run also passes for both viewports.
+Screenshots were reviewed; drawer focus and mobile overflow checks pass. Tests
+include all three companies, real session identities, notification read receipts,
+repeated resolutions/reopening, independent confirmation, source relinking,
+current permissions, private file claiming and default-deny tables/Storage.
+
+Approved live preparation: previous 22 migration hashes matched their unchanged
+source prefix. Additive migrations 0022/0023 applied successfully; all 24 ledger
+hashes now match, all 57 tables have RLS and browser grants remain revoked. The
+separate private Help bucket is configured with a 10 MiB limit. Storage capability
+verification, source publication and application rollout follow.
+
+Live Storage verification passes: actual 10 MiB direct signed upload, immutable-path
+overwrite denial, exact byte integrity, private signed download, anonymous denial,
+oversized upload rejection and cleanup of the unique infrastructure probes. No
+production CRM/customer/employee fixtures were inserted or modified.

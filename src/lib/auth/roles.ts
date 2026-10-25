@@ -13,6 +13,9 @@ export const roles = [
 ] as const;
 export type Role = (typeof roles)[number];
 export const permissions = [
+  "help.read",
+  "help.raise",
+  "help.resolve",
   "employees.manage",
   "permissions.manage",
   "settings.manage",
@@ -37,6 +40,8 @@ export const defaults: Record<Role, readonly Permission[]> = {
   "Super Admin": permissions,
   Admin: permissions,
   "Sales Manager": [
+    "help.read",
+    "help.raise",
     "leads.read",
     "leads.write",
     "appointments.manage",
@@ -45,8 +50,10 @@ export const defaults: Record<Role, readonly Permission[]> = {
     "reports.read",
     "documents.read",
   ],
-  CSE: ["leads.read", "leads.write", "appointments.manage"],
+  CSE: ["help.read", "help.raise", "leads.read", "leads.write", "appointments.manage"],
   "Sales Executive": [
+    "help.read",
+    "help.raise",
     "leads.read",
     "leads.write",
     "appointments.manage",
@@ -61,6 +68,8 @@ export const defaults: Record<Role, readonly Permission[]> = {
     "documents.write",
   ],
   "Post-Sales Coordinator": [
+    "help.read",
+    "help.resolve",
     "orders.read",
     "orders.manage",
     "service.manage",
@@ -72,6 +81,8 @@ export const defaults: Record<Role, readonly Permission[]> = {
   Accounts: ["orders.read", "payments.manage", "reports.read"],
   "Installation Team": ["orders.read", "installations.manage", "documents.read", "documents.write"],
   "Service Engineer": [
+    "help.read",
+    "help.resolve",
     "orders.read",
     "audits.manage",
     "service.manage",
@@ -81,6 +92,7 @@ export const defaults: Record<Role, readonly Permission[]> = {
 };
 
 export const modulePermission: Record<string, Permission> = {
+  "help-tickets": "help.read",
   leads: "leads.read",
   customers: "leads.read",
   projects: "leads.read",

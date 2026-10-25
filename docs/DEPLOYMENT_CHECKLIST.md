@@ -171,3 +171,23 @@ Git-based deployments still require the `.gitignore`/initial commit secret revie
 
 Official platform references are linked in PRODUCTION_READINESS_AUDIT.md. Check
 current plan-specific limits and platform instructions when executing this checklist.
+
+## Help Tickets release extension
+
+- Review additive migrations 0022/0023 and preserve the bytes of all applied SQL.
+  Use `npm run db:migrate`; inspect prefix/all migration hashes and verify 57-table
+  RLS plus revoked browser grants. Do not use db push or change historical hashes.
+- Configure the separate private `siteflow-help-ticket-files` bucket using
+  `npx tsx --conditions=react-server scripts/configure-help-storage.ts`.
+  Keep the existing 4 MiB document bucket unchanged. Verify 10 MiB/MIME restrictions,
+  restrictive browser-deny policy and the production CSP Storage allowlist.
+- With authorization, `npx tsx --conditions=react-server scripts/verify-help-storage.ts`
+  tests a unique infrastructure probe: direct 10 MiB upload, overwrite denial,
+  private signed download, anonymous denial and oversize rejection. It removes its
+  own probes and never creates CRM/customer records.
+- Verify Sales/CSE intake, service resolver permissions and scoped Admin settings.
+  Do not automatically give all employee roles new record/financial access.
+- Test creator/resolver/independent Admin, reopening and reassignment using isolated
+  records. Smoke-check live empty/scoped pages without inserting fabricated tickets.
+- See HELP_TICKETS.md for lease expiry/orphan cleanup, permission configuration,
+  immutable evidence and the absence of automatic external notifications.

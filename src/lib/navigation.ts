@@ -1,5 +1,13 @@
 export const modules = [
   {
+    slug: "help-tickets",
+    title: "Help Tickets",
+    group: "Workspace",
+    description: "Customer concerns from enquiry through service.",
+    empty: "Keep every concern connected",
+    detail: "Raise, resolve and confirm customer help requests.",
+  },
+  {
     slug: "service",
     title: "Customer service",
     group: "Operations",

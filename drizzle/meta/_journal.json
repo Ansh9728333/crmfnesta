@@ -155,6 +155,20 @@
       "when": 1792906990301,
       "tag": "0021_admin-managed-passwords",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1792914650326,
+      "tag": "0022_help-tickets",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792914720832,
+      "tag": "0023_help-ticket-security",
+      "breakpoints": true
     }
   ]
 }

@@ -362,3 +362,21 @@ database credentials. No sample customer data or invented business totals.
   follow-ups, production, payments, installation and audits. Save per-user read/dismiss
   decisions, hide resolved sources and re-evaluate changed due dates. No external
   notification sending is claimed. See MANAGEMENT_REPORTING.md for exact definitions.
+
+## General Help Tickets (approved addition)
+
+- Put Help Tickets first in Workspace, before Projects; add contextual intake on
+  leads/projects. Derive client/location from existing authorized records and
+  Raised By from the actual session. Concern, details, priority and resolver are
+  mandatory; supporting PDF/JPEG/PNG is at most 10 MiB, optional by default and
+  configurable as required by Admin concern type.
+- Send real in-app tasks to the assigned resolver. Submitted solutions return to
+  the creator for confirmation or reopening with a reason. Retain every attempt;
+  resolver cannot close their own solution. Self-assignment requires a separate
+  Admin to confirm. Admin reassignment, closure and recurrence remain audited.
+- Use the same general workflow for all three companies before/after an order,
+  without relaxing handover-only aftercare Service Tickets. Scope every query,
+  mutation and file access; keep private Storage, SQL pagination, optimistic
+  concurrency, duplicate-request prevention and immutable history.
+- Admin configures active concern types, mandatory evidence and SLA hours; existing
+  tickets retain their snapshots. See HELP_TICKETS.md for access and rollout.

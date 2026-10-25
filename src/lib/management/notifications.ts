@@ -9,6 +9,7 @@ import { auditLogs, notificationReceipts } from "../db/schema";
 import { ctes, query } from "./queries";
 import { filterSchema, notificationAction } from "./validation";
 import { grace } from "./scope";
+import { helpTaskSource } from "../help-tickets/access";
 const relevant = (a: Access, permissions: Permission[]) => ({
   ...a,
   assignments: a.assignments.filter((x) =>
@@ -36,7 +37,7 @@ export function notificationService(db: Database, settings: AuthSettings) {
             mode: z.enum(["", "count"]).default(""),
           })
           .parse(raw),
-        q = sources(a);
+        q = sql`${sources(a)} union all ${helpTaskSource(a)}`;
       const visible = sql`from (${q}) n left join notification_receipts r on r.user_id=${a.user.id} and r.kind=n.kind and r.entity_id=n.entity_id and r.due_at=n.due_at where n.due_at<now() and coalesce(r.state,'unread')<>'dismissed' ${f.unread === "yes" ? sql`and r.id is null` : sql``}`;
       const [{ total, unread }] = await query<{ total: string; unread: string }>(
         db,
@@ -72,7 +73,7 @@ export function notificationService(db: Database, settings: AuthSettings) {
         const a = await access(h, tx),
           [n] = await query<{ organization_id: string }>(
             tx,
-            sql`select organization_id from (${sources(a)}) n where n.kind=${input.kind} and n.entity_id=${input.entityId} and n.due_at=${new Date(input.dueAt).toISOString()}::timestamptz and n.due_at<now()`,
+            sql`select organization_id from (${sources(a)} union all ${helpTaskSource(a)}) n where n.kind=${input.kind} and n.entity_id=${input.entityId} and n.due_at=${new Date(input.dueAt).toISOString()}::timestamptz and n.due_at<now()`,
           );
         if (!n) throw new AccessError(404, "Notification resolved or unavailable");
         await tx

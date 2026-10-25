@@ -190,6 +190,14 @@ export function ParentWorkspace({
                   </td>
                   <td className="px-5 py-5">
                     <div className="flex flex-wrap gap-3">
+                      {kind === "projects" && (
+                        <Link
+                          className="font-semibold text-primary underline"
+                          href={`/help-tickets?kind=project&sourceId=${row.id}`}
+                        >
+                          Raise Help Ticket
+                        </Link>
+                      )}
                       {kind === "customers" && (
                         <Link
                           className="font-semibold text-primary underline"

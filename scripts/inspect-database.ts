@@ -36,12 +36,16 @@ async function main() {
       const [storage] = await tx`select exists(select 1 from pg_policies where schemaname='storage'
         and tablename='objects' and policyname='siteflow_documents_server_only'
         and permissive='RESTRICTIVE') as guarded`;
+      const [helpStorage] =
+        await tx`select exists(select 1 from pg_policies where schemaname='storage' and tablename='objects' and policyname='siteflow_help_files_server_only' and permissive='RESTRICTIVE') as guarded`;
       return {
         connected: true,
         serverVersion: version.version,
         publicTables: tables.map((table) => table.table_name),
         migrationLedgerPresent: ledger.present,
         appliedMigrations: applied.length,
+        appliedPrefixHashesMatch: applied.every((row, index) => row.hash === expected[index]?.hash),
+        pendingMigrations: Math.max(0, expected.length - applied.length),
         migrationHashesMatch:
           applied.length === expected.length &&
           applied.every((row, index) => row.hash === expected[index].hash),
@@ -50,6 +54,7 @@ async function main() {
           .filter((row) => row.anon_access || row.authenticated_access)
           .map((row) => row.table_name),
         privateBucketPolicyPresent: storage.guarded,
+        privateHelpBucketPolicyPresent: helpStorage.guarded,
       };
     });
     console.log(JSON.stringify(result));

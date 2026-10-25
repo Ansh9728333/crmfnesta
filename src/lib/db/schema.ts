@@ -1228,3 +1228,144 @@ export const notificationReceipts = pgTable(
   },
   (t) => [unique().on(t.userId, t.kind, t.entityId), index().on(t.userId, t.state)],
 );
+
+// General customer help is available before an order/handover exists.
+export const helpConcernPolicies = pgTable(
+  "help_concern_policies",
+  {
+    ...scope(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    active: boolean("active").notNull().default(true),
+    attachmentRequired: boolean("attachment_required").notNull().default(false),
+    slaHours: integer("sla_hours"),
+    version: integer("version").notNull().default(1),
+  },
+  (t) => [
+    unique().on(t.organizationId, t.code),
+    check("help_sla_positive", sql`${t.slaHours} between 1 and 8760`),
+  ],
+);
+
+export const helpTickets = pgTable(
+  "help_tickets",
+  {
+    ...scope(),
+    number: text("number").notNull().unique(),
+    centreId: uuid("centre_id").notNull(),
+    customerId: uuid("customer_id").notNull(),
+    leadId: uuid("lead_id"),
+    projectId: uuid("project_id"),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => user.id),
+    assignedTo: text("assigned_to")
+      .notNull()
+      .references(() => user.id),
+    concern: text("concern").notNull(),
+    details: text("details").notNull(),
+    priority: text("priority").notNull(),
+    status: text("status").notNull().default("raised"),
+    attachmentRequired: boolean("attachment_required").notNull().default(false),
+    dueAt: time("due_at"),
+    resolvedBy: text("resolved_by").references(() => user.id),
+    resolvedAt: time("resolved_at"),
+    closedBy: text("closed_by").references(() => user.id),
+    closedAt: time("closed_at"),
+    version: integer("version").notNull().default(1),
+    requestId: uuid("request_id").notNull().unique(),
+  },
+  (t) => [
+    unique().on(t.id, t.organizationId),
+    foreignKey({
+      columns: [t.centreId, t.organizationId],
+      foreignColumns: [centres.id, centres.organizationId],
+    }),
+    foreignKey({
+      columns: [t.customerId, t.organizationId],
+      foreignColumns: [customers.id, customers.organizationId],
+    }),
+    foreignKey({
+      columns: [t.leadId, t.organizationId],
+      foreignColumns: [leads.id, leads.organizationId],
+    }),
+    foreignKey({
+      columns: [t.projectId, t.organizationId],
+      foreignColumns: [projects.id, projects.organizationId],
+    }),
+    index().on(t.organizationId, t.centreId, t.status, t.createdAt),
+    index().on(t.assignedTo, t.status, t.dueAt),
+    index().on(t.createdBy, t.status),
+    check("help_source_required", sql`${t.leadId} is not null or ${t.projectId} is not null`),
+    check(
+      "help_status",
+      sql`${t.status} in ('raised','in_progress','awaiting_confirmation','reopened','closed')`,
+    ),
+    check("help_priority", sql`${t.priority} in ('low','normal','high','urgent')`),
+    check(
+      "help_resolution_evidence",
+      sql`(${t.status} in ('awaiting_confirmation','closed')) = (${t.resolvedAt} is not null and ${t.resolvedBy} is not null)`,
+    ),
+    check(
+      "help_closure_evidence",
+      sql`(${t.status}='closed') = (${t.closedAt} is not null and ${t.closedBy} is not null)`,
+    ),
+  ],
+);
+
+export const helpTicketEvents = pgTable(
+  "help_ticket_events",
+  {
+    ...scope(),
+    ticketId: uuid("ticket_id").notNull(),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id),
+    action: text("action").notNull(),
+    notes: text("notes").notNull(),
+    before: jsonb("before").$type<Record<string, unknown>>(),
+    after: jsonb("after").$type<Record<string, unknown>>().notNull(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.ticketId, t.organizationId],
+      foreignColumns: [helpTickets.id, helpTickets.organizationId],
+    }),
+    index().on(t.ticketId, t.createdAt),
+  ],
+);
+
+// Upload leases precede submission; only verified, unexpired files can be claimed.
+export const helpTicketFiles = pgTable(
+  "help_ticket_files",
+  {
+    ...scope(),
+    ticketId: uuid("ticket_id"),
+    centreId: uuid("centre_id").notNull(),
+    sourceKind: text("source_kind").notNull(),
+    sourceId: uuid("source_id").notNull(),
+    uploadedBy: text("uploaded_by")
+      .notNull()
+      .references(() => user.id),
+    name: text("name").notNull(),
+    contentType: text("content_type").notNull(),
+    size: integer("size").notNull(),
+    objectPath: text("object_path").notNull().unique(),
+    verifiedAt: time("verified_at"),
+    expiresAt: time("expires_at").notNull(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.ticketId, t.organizationId],
+      foreignColumns: [helpTickets.id, helpTickets.organizationId],
+    }),
+    foreignKey({
+      columns: [t.centreId, t.organizationId],
+      foreignColumns: [centres.id, centres.organizationId],
+    }),
+    index().on(t.ticketId),
+    check("help_file_size", sql`${t.size} between 1 and 10485760`),
+    check("help_file_type", sql`${t.contentType} in ('application/pdf','image/png','image/jpeg')`),
+    check("help_file_claim", sql`${t.ticketId} is null or ${t.verifiedAt} is not null`),
+  ],
+);

@@ -19,3 +19,9 @@ export const browserFinance = {
   initial: "Isolated-Finance-Initial-Password-123!",
   password: "Isolated-Finance-Changed-Password-456!",
 };
+
+export const browserHelp = {
+  creator: { username: "browser.help.creator", email: "browser-help-creator@example.test" },
+  resolver: { username: "browser.help.resolver", email: "browser-help-resolver@example.test" },
+  password: "Isolated-Help-Password-456!",
+};

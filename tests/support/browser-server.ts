@@ -12,7 +12,9 @@ import { bootstrapAdmin } from "../../src/lib/auth/bootstrap";
 import { buildAuth } from "../../src/lib/auth/config";
 import { changeEmployeePassword } from "../../src/lib/auth/password";
 import { employeeService } from "../../src/lib/employees/service";
-import { browserAdmin, browserFinance } from "./browser-credentials";
+import { browserAdmin, browserFinance, browserHelp } from "./browser-credentials";
+import { leadService } from "../../src/lib/leads/service";
+import { leadFormSchema } from "../../src/lib/leads/validation";
 import { seedPostSalesBrowser } from "./seed-post-sales";
 
 async function main() {
@@ -104,6 +106,39 @@ async function main() {
         .join("; "),
     }),
     { currentPassword: browserFinance.initial, newPassword: browserFinance.password },
+  );
+  const [helpCentre] = await db.select().from(schema.centres);
+  let helpCreatorId = "";
+  for (const key of ["creator", "resolver"] as const) {
+    const p = await employeeService(db, settings).create(seedHeaders, {
+      name: `Browser Help ${key}`,
+      username: browserHelp[key].username,
+      email: browserHelp[key].email,
+      password: browserHelp.password,
+      mobile: "9000000098",
+      department: "Help desk",
+      active: true,
+      assignments: [
+        {
+          organizationId: helpCentre.organizationId,
+          centreId: helpCentre.id,
+          role: key === "creator" ? "Sales Executive" : "Service Engineer",
+        },
+      ],
+    });
+    if (key === "creator") helpCreatorId = p.id;
+  }
+  await leadService(db, settings).create(
+    seedHeaders,
+    leadFormSchema.parse({
+      organizationId: helpCentre.organizationId,
+      centreId: helpCentre.id,
+      assignedTo: helpCreatorId,
+      clientName: "Browser Help Customer",
+      mobile: "9876500097",
+      projectName: "Browser Help Project",
+      siteAddress: "Disposable help ticket browser test site",
+    }),
   );
   await client.end();
   const app = spawn(

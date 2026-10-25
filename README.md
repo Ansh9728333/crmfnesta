@@ -302,3 +302,12 @@ Reviewed migrations 0018–0020 bring the schema to 53 tables and add configurat
 notification receipts, immutable document snapshots and reporting indexes. Live
 Supabase acceptance remains pending real environment credentials. No deployment
 or source push has been performed.
+
+General **Help Tickets** now supports customer concerns from lead/project intake
+through service, with assigned resolvers, independent creator confirmation,
+reopening, private 10 MiB evidence, Admin concern/SLA settings and in-app tasks.
+Open `/help-tickets`; use `/help-tickets/settings` as Admin. This is separate from
+handover-only Service Tickets. See [Help Ticket rules](docs/HELP_TICKETS.md).
+Reviewed migrations 0022/0023 bring the schema to 57 tables. Historical phase notes
+above describe their original implementation checkpoints; current release evidence
+is recorded in [deployment status](docs/DEPLOYMENT_STATUS.md).
