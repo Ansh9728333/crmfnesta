@@ -3,15 +3,16 @@
 Status: **LIVE; operational checklist remains partly open**. Every unchecked item needs evidence.
 The user authorized Supabase/Vercel live deployment and source push on 25 October 2026. The selected GitHub repository is Ansh9728333/crmfnesta. Supabase connectivity
 was verified with its trusted CA and certificate verification enabled; the initial
-public schema was empty. Reviewed migrations 0000–0020 have now been applied.
+public schema was empty. Reviewed migrations 0000–0021 have now been applied.
 Vercel CLI authentication is complete; source is pushed to Ansh9728333/crmfnesta
 and main-branch hosted CI passed. Vercel project crmfnesta and its production
 environment are configured. Live administrator provisioning was separately approved
 by the user and completed through Better Auth with a new password. Real private
 Storage upload, anonymous denial and signed byte-preserving download were verified;
-only the unique infrastructure probe was removed. Application release 2357ee3 is live
-at https://crmfnesta.vercel.app; production HTTPS, real login, first-password-change,
-logout/session revocation and desktop/mobile browser checks passed. See
+only the unique infrastructure probe was removed. Application release 417871d is live
+at https://crmfnesta.vercel.app; production HTTPS, direct dashboard login,
+Admin-selected password/designation fields, logout/session revocation and
+desktop/mobile browser checks passed. Existing passwords are unchanged. See
 DEPLOYMENT_STATUS.md for release evidence and remaining operational items.
 After the warning, the user explicitly supplied the same legacy server key again
 and directed setup to continue. It is stored only in ignored local configuration
@@ -68,7 +69,7 @@ Git-based deployments still require the `.gitignore`/initial commit secret revie
       separate where possible and test the exact runtime role, triggers and functions.
 - [ ] Back up the target, then run **only after authorization**
       `npm run db:migrate` from a trusted operator using DIRECT_URL. Apply reviewed
-      migrations 0000–0020 together, including security guards. Never `db push`.
+      migrations 0000–0021 together, including security guards. Never `db push`.
       Compare `drizzle.__drizzle_migrations` hashes/order to the release artifacts;
       rerun the migration runner and confirm no extra changes.
 - [ ] Inspect all 53 application tables for enabled RLS, no browser allow policies

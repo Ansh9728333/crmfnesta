@@ -439,3 +439,17 @@ five already-applied SQL artifacts. Their SQL was not changed; .gitattributes no
 preserves original SQL bytes, and the staged artifacts match the actual previously
 applied sources. No database ledger hashes were rewritten. This keeps future clean
 checkouts/migration hash verification reproducible. Live rollout follows.
+
+Phase 10 live rollout completed: migration 0021 applied through the reviewed runner;
+all 22 hashes match and 53-table RLS/browser restrictions remain verified. UI/account
+release b5d5791 and final copy clarification 417871d both passed full hosted CI.
+Final production deployment is dpl_3AwgW6PnF2HwG2hQiMG3uAhYfPUp at the existing
+https://crmfnesta.vercel.app URL. Production build and HTTPS verification pass.
+Real existing-password login now reaches the dashboard and Admin API directly;
+no password was reset. Secure cookies, public endpoint denial, optional own-password
+page and sign-out revocation remain verified. Live desktop/mobile theme and account
+form checks pass: Admin password input is empty, designation is selectable, and no
+temporary credential is generated. No production employee/customer/order test record
+was created or changed. Private login instructions were relabelled without changing
+the saved password. The final deployed release's hosted CI is successful; updated
+release evidence is in docs/DEPLOYMENT_STATUS.md.
