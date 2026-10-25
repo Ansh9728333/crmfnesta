@@ -982,6 +982,7 @@ export function leadService(db: Database, settings: AuthSettings) {
       const where = and(
         customerScope(db, access),
         filters.organizationId ? eq(customers.organizationId, filters.organizationId) : undefined,
+        filters.customerId ? eq(customers.id, filters.customerId) : undefined,
         filters.q
           ? or(
               ilike(customers.name, pattern(filters.q)),

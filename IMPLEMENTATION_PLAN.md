@@ -547,3 +547,21 @@ hosted CI passed, including all public/authenticated browser regressions. Final
 read-only production form/real dropdown/typing/identity/notification checks pass.
 All original questions are present before client selection. Live CRM records,
 employee assignments, credentials and role grants were not changed during testing.
+
+## Phase 13 — Operating guide and Customer to Project lookup review
+
+User requested a detailed Hindi Word operating guide, end-to-end workflow testing,
+completion status and an explanation of the empty Add Project customer list.
+Inspection found the picker previously loaded only after Find. It now autoloads
+permitted customers on opening/company change, displays loading/no-result guidance,
+retains real names for preselected customers, and supports Enter search. A scoped
+customer-ID filter preserves the existing customer/lead/company access predicate.
+No general record permissions or company ownership rules were widened.
+
+Expanded tests cover direct customer creation, automatic picker options, empty/name
+search, project creation/reload and successful preselected-ID requests. Database
+coverage denies another employee's customer-ID lookup. A separate Documents index
+is still planned; its copy now directs users to implemented contextual uploads.
+The requested private Word guide documents modules, prerequisites, all 7/16 stages,
+quotations, loads, payments, aftercare, Help, permissions, testing and limitations.
+No credentials or real customer information belong in the published source/manual.

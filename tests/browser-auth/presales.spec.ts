@@ -151,4 +151,61 @@ test("creates, edits, assigns, filters and reloads persisted pre-sales records",
   await expect(page.getByRole("cell", { name: prefix, exact: true })).toBeVisible();
   await page.goto("/projects");
   await expect(page.getByRole("cell", { name: `${prefix} Villa`, exact: true })).toBeVisible();
+  await page.goto("/customers");
+  await page.getByRole("button", { name: "Add customer", exact: true }).click();
+  const contact = page.getByRole("dialog", { name: "Add customer", exact: true });
+  await contact.getByLabel("Customer name", { exact: true }).fill(`${prefix} Direct Contact`);
+  await contact
+    .getByLabel("Mobile no.", { exact: true })
+    .fill(testInfo.project.name === "desktop" ? "9876500191" : "9876500192");
+  await contact.getByRole("button", { name: "Create customer", exact: true }).click();
+  await expect(contact).not.toBeVisible();
+  await page.goto("/projects");
+  await page.getByRole("button", { name: "Add project", exact: true }).click();
+  const project = page.getByRole("dialog", { name: "Add project", exact: true });
+  const picker = project.getByRole("combobox", { name: "Customer", exact: true });
+  await expect(
+    picker.locator("option").filter({ hasText: `${prefix} Direct Contact` }),
+  ).toHaveCount(1);
+  await project.getByLabel("Find customer", { exact: true }).fill("NoSuchPermittedCustomer_2026");
+  await project.getByRole("button", { name: "Find", exact: true }).click();
+  await expect(project.getByText(/No matching customers in this company/)).toBeVisible();
+  await project.getByLabel("Find customer", { exact: true }).fill(`${prefix} Direct Contact`);
+  await project.getByRole("button", { name: "Find", exact: true }).click();
+  await expect(
+    picker.locator("option").filter({ hasText: `${prefix} Direct Contact` }),
+  ).toHaveCount(1);
+  const customerValue = await picker
+    .locator("option")
+    .filter({ hasText: `${prefix} Direct Contact` })
+    .getAttribute("value");
+  await picker.selectOption(customerValue!);
+  await project.getByLabel("Project name", { exact: true }).fill(`${prefix} Direct Project`);
+  await project
+    .getByLabel("Site address", { exact: true })
+    .fill("Independent project test address Delhi");
+  await project.screenshot({ path: `test-results/add-project-${testInfo.project.name}.png` });
+  await project.getByRole("button", { name: "Create project", exact: true }).click();
+  await expect(project).not.toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("cell", { name: `${prefix} Direct Project`, exact: true }),
+  ).toBeVisible();
+  await page.goto(`/projects?customerId=${customerValue}`);
+  const linkedLookup = page.waitForResponse((r) => {
+    const u = new URL(r.url());
+    return u.pathname === "/api/customers" && u.searchParams.get("customerId") === customerValue;
+  });
+  await page.getByRole("button", { name: "Add project", exact: true }).click();
+  const linked = page.getByRole("dialog", { name: "Add project", exact: true });
+  await expect(linked.getByRole("combobox", { name: "Customer", exact: true })).toHaveValue(
+    customerValue!,
+  );
+  await expect(
+    linked.getByRole("combobox", { name: "Customer", exact: true }).locator("option:checked"),
+  ).toContainText(`${prefix} Direct Contact`);
+  expect((await linkedLookup).status()).toBe(200);
+  await linked.getByRole("button", { name: "Close", exact: true }).click();
+  await page.goto("/documents");
+  await expect(page.getByText("Planned module", { exact: true })).toBeVisible();
 });

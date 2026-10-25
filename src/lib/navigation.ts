@@ -109,7 +109,7 @@ export const modules = [
     description: "Keep drawings, measurements and project files together.",
     empty: "The right document, in the right hands",
     detail:
-      "Private Supabase Storage and company-scoped access policies will be implemented before uploads and downloads are enabled.",
+      "Upload and download private files inside Leads, order stages, Payments, Dispatch, Installations and Help Tickets. This standalone document index is planned.",
   },
   {
     slug: "reports",

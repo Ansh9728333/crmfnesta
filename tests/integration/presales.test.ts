@@ -158,6 +158,14 @@ describe("persisted common pre-sales workflow", () => {
       ),
     ).rejects.toMatchObject({ status: 403 });
   });
+  it("finds a selected customer by ID without bypassing record scope", async () => {
+    const customerId = (await service.detail(a, leadId)).lead.customerId;
+    expect((await service.customers(a, { customerId })).rows.map((c) => c.id)).toEqual([
+      customerId,
+    ]);
+    expect((await service.customers(b, { customerId })).total).toBe(0);
+    expect((await service.customers(admin, { customerId: randomUUID() })).total).toBe(0);
+  });
   it("detects normalized-mobile duplicates and links multiple projects to one customer", async () => {
     await expect(
       service.create(a, input({ mobile: "+91 98765 43201", projectName: "Second Villa" })),
@@ -325,18 +333,16 @@ describe("persisted common pre-sales workflow", () => {
     expect(detail.visits[0].measurements[0].value).toBe("1500");
     expect(detail.files[0].appointmentId).toBe(visit.id);
     await expect(
-      db
-        .insert(schema.presalesAttachments)
-        .values({
-          organizationId: orgs[0].id,
-          leadId: secondId,
-          appointmentId: visit.id,
-          name: "Wrong lead.png",
-          objectPath: "isolated-invalid-test-path",
-          contentType: "image/png",
-          byteSize: 8,
-          uploadedBy: ids.a,
-        }),
+      db.insert(schema.presalesAttachments).values({
+        organizationId: orgs[0].id,
+        leadId: secondId,
+        appointmentId: visit.id,
+        name: "Wrong lead.png",
+        objectPath: "isolated-invalid-test-path",
+        contentType: "image/png",
+        byteSize: 8,
+        uploadedBy: ids.a,
+      }),
     ).rejects.toThrow();
     expect((await workflow.list(admin, "appointments", { q: "Integration" })).total).toBe(1);
   });

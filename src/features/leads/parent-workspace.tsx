@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,42 @@ export function ParentWorkspace({
     [employee, setEmployee] = useState(defaults.assignedTo),
     [customer, setCustomer] = useState(query.customerId ?? ""),
     [customerResults, setCustomerResults] = useState<CustomerList | null>(null),
+    [selectedCustomer, setSelectedCustomer] = useState<CustomerList["rows"][number] | null>(null),
+    [lookupLoading, setLookupLoading] = useState(false),
     [customerQuery, setCustomerQuery] = useState("");
+  const lookupSequence = useRef(0),
+    linkedCustomerId = query.customerId ?? "";
+  useEffect(() => {
+    if (!open || kind !== "projects" || !org) return;
+    let active = true;
+    const sequence = ++lookupSequence.current;
+    async function load() {
+      try {
+        const result = await requestJson<CustomerList>(
+          `/api/customers?organizationId=${org}&page=1&pageSize=20`,
+        );
+        if (active && sequence === lookupSequence.current) setCustomerResults(result);
+        if (linkedCustomerId) {
+          const selected = await requestJson<CustomerList>(
+            `/api/customers?organizationId=${org}&customerId=${linkedCustomerId}&pageSize=5`,
+          );
+          if (active && sequence === lookupSequence.current) {
+            setSelectedCustomer(selected.rows[0] ?? null);
+            setCustomer(selected.rows[0]?.id ?? "");
+          }
+        }
+      } catch (e) {
+        if (active && sequence === lookupSequence.current)
+          setError(e instanceof Error ? e.message : "Customer lookup failed");
+      } finally {
+        if (active && sequence === lookupSequence.current) setLookupLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [open, kind, org, linkedCustomerId]);
   const people = [
     ...new Map(
       directory.employees
@@ -64,14 +99,19 @@ export function ParentWorkspace({
     return `/${kind}?${params}`;
   };
   async function findCustomers(page = 1) {
+    const sequence = ++lookupSequence.current;
+    setLookupLoading(true);
+    setError("");
     try {
-      setCustomerResults(
-        await requestJson<CustomerList>(
-          `/api/customers?organizationId=${org}&q=${encodeURIComponent(customerQuery)}&page=${page}&pageSize=20`,
-        ),
+      const result = await requestJson<CustomerList>(
+        `/api/customers?organizationId=${org}&q=${encodeURIComponent(customerQuery)}&page=${page}&pageSize=20`,
       );
+      if (sequence === lookupSequence.current) setCustomerResults(result);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Customer lookup failed");
+      if (sequence === lookupSequence.current)
+        setError(e instanceof Error ? e.message : "Customer lookup failed");
+    } finally {
+      if (sequence === lookupSequence.current) setLookupLoading(false);
     }
   }
   return (
@@ -100,6 +140,11 @@ export function ParentWorkspace({
             <Button
               onClick={() => {
                 setError("");
+                setCustomerQuery("");
+                if (kind === "projects") {
+                  setLookupLoading(true);
+                  setCustomerResults(null);
+                }
                 setOpen(true);
               }}
             >
@@ -303,7 +348,10 @@ export function ParentWorkspace({
                   setCentre(c?.id ?? "");
                   setEmployee(p?.id ?? "");
                   setCustomer("");
+                  setSelectedCustomer(null);
+                  setCustomerQuery("");
                   setCustomerResults(null);
+                  setLookupLoading(true);
                 }}
               >
                 {directory.organizations.map((o) => (
@@ -361,9 +409,20 @@ export function ParentWorkspace({
                     aria-label="Find customer"
                     value={customerQuery}
                     onChange={(e) => setCustomerQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void findCustomers();
+                      }
+                    }}
                     placeholder="Find customer by name or mobile"
                   />
-                  <Button type="button" variant="outline" onClick={() => void findCustomers()}>
+                  <Button
+                    type="button"
+                    disabled={lookupLoading}
+                    variant="outline"
+                    onClick={() => void findCustomers()}
+                  >
                     Find
                   </Button>
                 </div>
@@ -372,13 +431,22 @@ export function ParentWorkspace({
                   <select
                     className={`${selectClass} mt-2`}
                     value={customer}
-                    onChange={(e) => setCustomer(e.target.value)}
+                    disabled={lookupLoading}
+                    onChange={(e) => {
+                      setCustomer(e.target.value);
+                      setSelectedCustomer(
+                        customerResults?.rows.find((x) => x.id === e.target.value) ?? null,
+                      );
+                    }}
                     required
                   >
                     <option value="">Select customer</option>
-                    {customer && !customerResults?.rows.some((c) => c.id === customer) && (
-                      <option value={customer}>Linked customer</option>
-                    )}
+                    {selectedCustomer &&
+                      !customerResults?.rows.some((c) => c.id === selectedCustomer.id) && (
+                        <option value={selectedCustomer.id}>
+                          {selectedCustomer.name} · {selectedCustomer.mobile}
+                        </option>
+                      )}
                     {customerResults?.rows.map((c) => (
                       <option value={c.id} key={c.id}>
                         {c.name} · {c.mobile}
@@ -386,6 +454,22 @@ export function ParentWorkspace({
                     ))}
                   </select>
                 </label>
+                {lookupLoading && (
+                  <p role="status" className="text-xs text-muted-foreground">
+                    Loading permitted customers…
+                  </p>
+                )}
+                {!lookupLoading && customerResults?.total === 0 && (
+                  <p role="status" className="text-xs text-muted-foreground">
+                    No matching customers in this company and your permitted records. Create the
+                    contact in Customers first, try its name/mobile, or ask Admin to check the
+                    customer and linked lead assignment.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Add Project links another site to an existing customer. New enquiries can be
+                  entered in Leads, which also creates or links the customer and project.
+                </p>
                 {customerResults && (
                   <div className="flex items-center justify-between text-xs">
                     <span>{customerResults.total} matching customers</span>
