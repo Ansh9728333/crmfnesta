@@ -33,6 +33,11 @@ The spelling is **IBAX**. All companies use the same workflows below.
 7. Order Won or Lost
 
 Won and lost must be distinct outcomes. Won orders continue into post-sales.
+Pre-sales progression uses Done on the current step, automatically starting only
+the next step after validating its required evidence. Do not offer arbitrary Move,
+drag/drop or editable stage selection. Preserve actor/time and completion history.
+Saving supporting data alone does not complete the current step. Final Won/Lost
+retains its quotation, quantity and closure-reason requirements.
 
 ## Post-sales workflow (ordered)
 

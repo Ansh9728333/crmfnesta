@@ -1,3 +1,4 @@
+import { salesSteps } from "../support/complete-presales";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -274,8 +275,13 @@ describe("persisted common pre-sales workflow", () => {
       observations: "",
       measurements: [],
     };
+    const steps = salesSteps(db, settings, a, leadId);
+    await steps.done();
+    await expect(steps.done()).rejects.toMatchObject({ status: 400 });
     const visit = await workflow.appointment(a, leadId, scheduled);
     expect((await service.detail(a, leadId)).lead.stage).toBe(2);
+    await steps.done();
+    await expect(steps.done()).rejects.toMatchObject({ status: 400 });
     await workflow.appointment(a, leadId, {
       ...scheduled,
       id: visit.id,
@@ -285,6 +291,8 @@ describe("persisted common pre-sales workflow", () => {
       measurements: [{ label: "Window width", value: "1500", unit: "mm" }],
     });
     expect((await service.detail(a, leadId)).lead.stage).toBe(3);
+    await steps.done();
+    expect((await service.detail(a, leadId)).lead.stage).toBe(4);
     await expect(
       workflow.appointment(a, leadId, { ...scheduled, id: visit.id, version: 1 }),
     ).rejects.toMatchObject({ status: 409 });
@@ -503,18 +511,9 @@ describe("persisted common pre-sales workflow", () => {
         data: { ...baseData, stage: 4 },
       }),
     ).rejects.toMatchObject({ status: 400 });
-    for (let stage = 2; stage <= 4; stage++) {
-      detail = await service.detail(a, secondId);
-      await service.update(a, secondId, {
-        version: detail.lead.version,
-        data: {
-          ...baseData,
-          stage,
-          outcome: "open",
-          finalisedValue: "",
-        },
-      });
-    }
+    const steps = salesSteps(db, settings, a, secondId);
+    await steps.throughVisit();
+    await steps.done();
     await workflow.engagement(a, secondId, {
       kind: "showroom",
       occurredAt: new Date().toISOString(),
@@ -523,6 +522,7 @@ describe("persisted common pre-sales workflow", () => {
       reason: "Customer viewed finishes on site",
       notes: "Alternative presentation completed",
     });
+    await steps.done();
     await workflow.engagement(a, secondId, {
       kind: "negotiation",
       occurredAt: new Date().toISOString(),
@@ -666,6 +666,102 @@ describe("persisted common pre-sales workflow", () => {
     expect(board[0].total).toBe(12);
     expect(board[0].rows).toHaveLength(10);
     expect((await service.list(admin, { q: "%' OR 1=1 --" })).total).toBe(0);
+  });
+  it("requires evidenced Done and rejects unauthorized, skipped and duplicate completions", async () => {
+    const id = (
+      await service.create(
+        a,
+        input({
+          clientName: "Completion Gate Customer",
+          mobile: "9876543299",
+          projectName: "Done site",
+          siteAddress: "Distinct completion workflow test address",
+        }),
+      )
+    ).id;
+    let detail = await service.detail(a, id);
+    await expect(
+      service.update(a, id, {
+        version: detail.lead.version,
+        data: input({
+          customerId: detail.lead.customerId,
+          projectId: detail.lead.projectId!,
+          stage: 2,
+        }),
+      }),
+    ).rejects.toMatchObject({
+      status: 400,
+      message: "Use Done on the current step; manual stage changes are not allowed",
+    });
+    await expect(
+      workflow.completeStage(b, id, { stage: 1, version: detail.lead.version }),
+    ).rejects.toMatchObject({ status: 404 });
+    await expect(
+      workflow.completeStage(a, id, { stage: 2, version: detail.lead.version }),
+    ).rejects.toMatchObject({ status: 409 });
+    const results = await Promise.allSettled(
+      [1, 2].map(() => workflow.completeStage(a, id, { stage: 1, version: detail.lead.version })),
+    );
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    detail = await service.detail(a, id);
+    expect(detail.lead.stage).toBe(2);
+    expect(detail.completedSteps.map((s) => s.stage)).toEqual([1]);
+    const steps = salesSteps(db, settings, a, id);
+    await expect(steps.done()).rejects.toMatchObject({ status: 400 });
+    const visit = { assignedTo: ids.a, scheduledAt: new Date().toISOString(), status: "scheduled" };
+    const saved = await workflow.appointment(a, id, visit);
+    expect((await service.detail(a, id)).lead.stage).toBe(2);
+    await steps.done();
+    await workflow.appointment(a, id, {
+      ...visit,
+      id: saved.id,
+      version: 1,
+      status: "completed",
+      observations: "Inspected",
+    });
+    await expect(steps.done()).rejects.toMatchObject({ status: 400 });
+    await workflow.appointment(a, id, {
+      ...visit,
+      status: "completed",
+      observations: "Measured",
+      measurements: [{ label: "Width", value: "1200", unit: "mm" }],
+    });
+    await steps.done();
+    await expect(steps.done()).rejects.toMatchObject({ status: 400 });
+    await workflow.quotation(a, id, {
+      expectedRevision: 0,
+      items: [
+        {
+          name: "Window",
+          productCompanyId: orgs[0].id,
+          quantity: "1",
+          unitPrice: "100",
+          discount: "0",
+        },
+      ],
+    });
+    expect((await service.detail(a, id)).lead.stage).toBe(4);
+    await steps.done();
+    await expect(steps.done()).rejects.toMatchObject({ status: 400 });
+    await workflow.engagement(a, id, {
+      kind: "showroom",
+      occurredAt: new Date().toISOString(),
+      outcome: "Not Required",
+      notRequired: true,
+      reason: "Customer saw site samples",
+    });
+    await steps.done();
+    detail = await service.detail(a, id);
+    expect(detail.lead.stage).toBe(6);
+    expect(detail.completedSteps).toHaveLength(5);
+    await service.note(a, id, {
+      version: detail.lead.version,
+      notes: "Not an actual completion — Done",
+    });
+    expect((await service.detail(a, id)).completedSteps).toHaveLength(5);
+    await expect(
+      workflow.completeStage(a, id, { stage: 6, version: detail.lead.version }),
+    ).rejects.toBeDefined();
   });
   it("archives/restores without deleting history and keeps permission changes current", async () => {
     let detail = await service.detail(manager, leadId);

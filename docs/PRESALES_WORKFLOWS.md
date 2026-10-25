@@ -25,10 +25,25 @@ not create document rows or report success. Failed database writes attempt objec
 cleanup; operational reconciliation of provider/connection failures remains a
 production readiness task. No production file store or credential fallback exists.
 
-Scheduling and completion advance adjacent stages 2 and 3 respectively; issuing a
-quotation advances adjacent stage 4, showroom outcome advances stage 5 and a
-negotiation advances stage 6. Manual stage tracking remains available. The exact
-canonical stages are shared across Finesta Home, IBAX and S-Grip.
+The current step advances only through Done. Manual Move, drag/drop and stage
+selection in Edit Lead are removed. Saving visit, quotation or interaction evidence
+does not advance the lead. Done checks the current version and step, records the
+employee/time/completion and starts exactly the next step in one transaction:
+
+- Step 1: complete contact, project, site and executive information → step 2.
+- Step 2: saved non-cancelled appointment/date/assignment → step 3.
+- Step 3: completed visit with observations and named measurements → step 4.
+- Step 4: issued item-wise quotation → step 5.
+- Step 5: showroom outcome or Not Required reason → step 6.
+- Step 6: Done opens the existing confirmed Won/Lost conversion. Won still requires
+  the latest accepted/approved quotation and initializes one order. Lost still
+  requires its reason and may close an enquiry at any earlier point.
+
+Missing evidence, stale/double submissions, arbitrary target steps and unauthorized
+employees cannot advance. Explicit Done history is displayed in Lead details;
+legacy earlier stages without a Done event are labelled Earlier step rather than
+backfilled with invented completion evidence. No migration or historical rewrite
+is required. The exact canonical stages are shared across all three companies.
 
 Quotations issue directly as immutable versions. V1 has no revision prerequisite;
 later versions require a reason and expected latest revision. Each item has name,

@@ -105,9 +105,9 @@ test("creates, edits, assigns, filters and reloads persisted pre-sales records",
   ).toBeVisible();
   await drawer.getByRole("button", { name: "Close", exact: true }).click();
   await page.goto(`/leads?view=board&q=${encodeURIComponent(prefix)}`);
-  await page.getByRole("button", { name: `Move ${prefix} Updated`, exact: true }).click();
-  let move = page.getByRole("dialog", { name: "Move lead", exact: true });
-  await move.getByRole("button", { name: "Confirm stage change", exact: true }).click();
+  await page.getByRole("button", { name: `Done ${prefix} Updated`, exact: true }).click();
+  let move = page.getByRole("dialog", { name: "Mark current step Done", exact: true });
+  await move.getByRole("button", { name: "Done · start next step", exact: true }).click();
   await expect(move).not.toBeVisible();
   await expect(
     page
@@ -116,13 +116,83 @@ test("creates, edits, assigns, filters and reloads persisted pre-sales records",
       .getByRole("button", { name: `${prefix} Updated`, exact: true }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: `Move ${prefix} Updated`, exact: true }).click();
-  move = page.getByRole("dialog", { name: "Move lead", exact: true });
-  await move.getByRole("combobox", { name: "Stage", exact: true }).selectOption("7");
-  await move.getByRole("combobox", { name: "Outcome", exact: true }).selectOption("lost");
-  await move.getByLabel("Lost reason", { exact: true }).fill("Customer postponed this project");
-  await move.getByRole("button", { name: "Confirm stage change", exact: true }).click();
-  await expect(move).not.toBeVisible();
+  await page.getByRole("button", { name: `Done ${prefix} Updated`, exact: true }).click();
+  move = page.getByRole("dialog", { name: "Mark current step Done", exact: true });
+  await move.getByRole("button", { name: "Done · start next step", exact: true }).click();
+  await expect(move.getByRole("alert")).toContainText("Save a site visit appointment");
+  await move.getByRole("button", { name: "Close", exact: true }).click();
+  async function evidence(action: string, data: unknown) {
+    const response = await context.request.post(`/api/leads/${leadId}/presales`, {
+      headers: { origin: "http://127.0.0.1:3100" },
+      data: { action, data },
+    });
+    expect(response.status()).toBe(200);
+    return response.json();
+  }
+  async function done(next: string) {
+    await page.reload();
+    await expect(page.getByRole("button", { name: /^Move / })).toHaveCount(0);
+    await page.getByRole("button", { name: `Done ${prefix} Updated`, exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Mark current step Done", exact: true });
+    await expect(dialog.getByRole("combobox")).toHaveCount(0);
+    await dialog.getByRole("button", { name: "Done · start next step", exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    await expect(
+      page
+        .locator("section")
+        .filter({ has: page.getByRole("heading", { name: next, exact: true }) })
+        .getByRole("button", { name: `${prefix} Updated`, exact: true }),
+    ).toBeVisible();
+  }
+  const appointment = {
+    assignedTo: employee.id,
+    scheduledAt: new Date().toISOString(),
+    status: "scheduled",
+  };
+  const savedVisit = await evidence("appointment", appointment);
+  await done("Site Visit and Initial Measurement");
+  await evidence("appointment", {
+    ...appointment,
+    id: savedVisit.id,
+    version: 1,
+    status: "completed",
+    observations: "Site measured",
+    measurements: [{ label: "Width", value: "1200", unit: "mm" }],
+  });
+  await done("Quotation Submitted");
+  await evidence("quotation", {
+    expectedRevision: 0,
+    items: [
+      {
+        name: "Window",
+        productCompanyId: organization.id,
+        quantity: "1",
+        unitPrice: "100",
+        discount: "0",
+      },
+    ],
+  });
+  await done("Customer Showroom Visit");
+  await evidence("engagement", {
+    kind: "showroom",
+    occurredAt: new Date().toISOString(),
+    outcome: "Not Required",
+    notRequired: true,
+    reason: "Customer saw samples at site",
+  });
+  await done("Negotiation / Quotation Revision");
+  await page.goto(detailUrl);
+  const status = page.getByRole("region", { name: "Step completion status" });
+  await expect(status.getByText("Done", { exact: true })).toHaveCount(5);
+  await page.reload();
+  await expect(status.getByText("Done", { exact: true })).toHaveCount(5);
+  await page.screenshot({ path: testInfo.outputPath("done-workflow.png"), fullPage: true });
+  await page.goto(`/leads/${leadId}/presales?tab=conversion`);
+  await page
+    .getByLabel("Lost closure reason", { exact: true })
+    .fill("Customer postponed this project");
+  await page.getByRole("button", { name: "Mark Lost", exact: true }).click();
+  await expect(page.getByText("lost", { exact: true }).first()).toBeVisible();
   await page.goto(detailUrl);
   await expect(page.getByRole("heading", { name: "Lost reason", exact: true })).toBeVisible();
   await expect(page.getByText("Customer postponed this project", { exact: true })).toBeVisible();

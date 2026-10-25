@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDownUp,
   ArrowRight,
   CalendarClock,
   ChevronLeft,
@@ -21,10 +20,11 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { preSalesStages } from "@/lib/domain/workflows";
 import type { LeadFilters } from "@/lib/leads/validation";
-import type { Directory, LeadBoard, LeadDetail, LeadList, LeadRow, Summary } from "./types";
+import type { Directory, LeadBoard, LeadDetail, LeadList, Summary } from "./types";
 import { LeadForm } from "./lead-form";
+import { StageCompletion } from "./stage-completion";
 import { LeadDetailView } from "./lead-detail";
-import { dateTime, leadInput, money, requestJson, selectClass } from "./utils";
+import { dateTime, money, requestJson, selectClass } from "./utils";
 
 export function LeadWorkspace({
   directory,
@@ -46,13 +46,8 @@ export function LeadWorkspace({
     [selected, setSelected] = useState<string | null>(null),
     [detail, setDetail] = useState<LeadDetail | null>(null),
     [error, setError] = useState(""),
-    [loading, setLoading] = useState(false),
     [columns, setColumns] = useState(board),
-    [columnBusy, setColumnBusy] = useState<number | null>(null),
-    [moving, setMoving] = useState<{ lead: LeadRow; stage: number } | null>(null),
-    [outcome, setOutcome] = useState("lost"),
-    [reason, setReason] = useState(""),
-    [finalValue, setFinalValue] = useState("");
+    [columnBusy, setColumnBusy] = useState<number | null>(null);
   const query = (patch: Record<string, string | number>) => {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({ ...filters, view, ...patch }))
@@ -84,13 +79,6 @@ export function LeadWorkspace({
     setSelected(null);
     setDetail(null);
     router.refresh();
-  };
-  const beginMove = (lead: LeadRow, stage = Math.min(lead.stage + 1, 7)) => {
-    setError("");
-    setMoving({ lead, stage });
-    setOutcome(stage === 7 && lead.stage >= 6 ? "won" : "lost");
-    setReason("");
-    setFinalValue(lead.finalisedValue ?? "");
   };
   async function more(stage: number) {
     const column = columns.find((c) => c.stage === stage);
@@ -368,22 +356,7 @@ export function LeadWorkspace({
         <div className="max-w-full overflow-x-auto pb-4" aria-label="Kanban sales pipeline">
           <div className="grid min-w-[2020px] grid-cols-7 items-start gap-4">
             {columns.map((column) => (
-              <section
-                key={column.stage}
-                className="rounded-xl border bg-[#eff2eb] p-3"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  try {
-                    const value = JSON.parse(
-                      e.dataTransfer.getData("application/siteflow-lead"),
-                    ) as LeadRow;
-                    if (value?.id) beginMove(value, column.stage);
-                  } catch {
-                    setError("Use the Move button to update this lead");
-                  }
-                }}
-              >
+              <section key={column.stage} className="rounded-xl border bg-[#eff2eb] p-3">
                 <header className="mb-4 flex min-h-14 items-start justify-between gap-2 px-1">
                   <div>
                     <span className="text-[9px] font-semibold tracking-widest text-primary">
@@ -397,14 +370,7 @@ export function LeadWorkspace({
                 </header>
                 <div className="space-y-3">
                   {column.rows.map((lead) => (
-                    <article
-                      key={lead.id}
-                      className="rounded-lg border bg-white p-4 shadow-sm"
-                      draggable={!lead.outcome && !lead.archivedAt && directory.canCreate}
-                      onDragStart={(e) =>
-                        e.dataTransfer.setData("application/siteflow-lead", JSON.stringify(lead))
-                      }
-                    >
+                    <article key={lead.id} className="rounded-lg border bg-white p-4 shadow-sm">
                       <div className="flex justify-between gap-2">
                         <Badge variant="secondary" className="text-[9px]">
                           {lead.companyName}
@@ -440,14 +406,7 @@ export function LeadWorkspace({
                           Details <ArrowRight size={12} />
                         </Button>
                         {!lead.outcome && !lead.archivedAt && directory.canCreate && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            aria-label={`Move ${lead.clientName}`}
-                            onClick={() => beginMove(lead)}
-                          >
-                            <ArrowDownUp size={12} /> Move
-                          </Button>
+                          <StageCompletion lead={lead} />
                         )}
                       </div>
                     </article>
@@ -627,121 +586,6 @@ export function LeadWorkspace({
           )}
         </SheetContent>
       </Sheet>
-      <Dialog
-        open={!!moving}
-        onOpenChange={(value) => {
-          if (!value && !loading) setMoving(null);
-        }}
-      >
-        <DialogContent>
-          <DialogTitle>Move lead</DialogTitle>
-          <DialogDescription>
-            {moving?.lead.clientName} · Stage changes are recorded in the timeline.
-          </DialogDescription>
-          <form
-            className="space-y-4"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!moving) return;
-              setLoading(true);
-              setError("");
-              try {
-                const current = await requestJson<LeadDetail>(`/api/leads/${moving.lead.id}`);
-                await requestJson(`/api/leads/${moving.lead.id}`, "PATCH", {
-                  version: moving.lead.version,
-                  data: {
-                    ...leadInput(current.lead),
-                    stage: moving.stage,
-                    outcome: moving.stage === 7 ? outcome : "open",
-                    lossReason: reason,
-                    finalisedValue: finalValue,
-                  },
-                });
-                setMoving(null);
-                router.refresh();
-              } catch (e) {
-                setError(e instanceof Error ? e.message : "Stage update failed");
-              } finally {
-                setLoading(false);
-              }
-            }}
-          >
-            <label className="block text-xs">
-              Stage
-              <select
-                className={`${selectClass} mt-2`}
-                value={moving?.stage ?? 1}
-                onChange={(e) => {
-                  setMoving((prev) => (prev ? { ...prev, stage: Number(e.target.value) } : null));
-                  setOutcome(
-                    Number(e.target.value) === 7 && (moving?.lead.stage ?? 0) >= 6 ? "won" : "lost",
-                  );
-                }}
-              >
-                {preSalesStages.map((s, i) => (
-                  <option
-                    key={s}
-                    value={i + 1}
-                    disabled={
-                      !!moving &&
-                      (i + 1 < moving.lead.stage || (i + 1 > moving.lead.stage + 1 && i + 1 !== 7))
-                    }
-                  >
-                    {i + 1}. {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {moving?.stage === 7 && (
-              <>
-                <label className="block text-xs">
-                  Outcome
-                  <select
-                    className={`${selectClass} mt-2`}
-                    value={outcome}
-                    onChange={(e) => setOutcome(e.target.value)}
-                  >
-                    <option value="won" disabled={moving.lead.stage < 6}>
-                      Won
-                    </option>
-                    <option value="lost">Lost</option>
-                  </select>
-                </label>
-                {outcome === "lost" ? (
-                  <label className="block text-xs">
-                    Lost reason
-                    <Input
-                      className="mt-2"
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                      required
-                      minLength={3}
-                      maxLength={1000}
-                    />
-                  </label>
-                ) : (
-                  <Button asChild variant="outline">
-                    <Link href={`/leads/${moving.lead.id}/presales?tab=conversion`}>
-                      Confirm quotation & convert to order
-                    </Link>
-                  </Button>
-                )}
-              </>
-            )}
-            {error && (
-              <p role="alert" className="text-xs text-destructive">
-                {error}
-              </p>
-            )}
-            <Button
-              disabled={loading || (moving?.stage === 7 && outcome === "won")}
-              className="w-full"
-            >
-              {loading ? "Saving…" : "Confirm stage change"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

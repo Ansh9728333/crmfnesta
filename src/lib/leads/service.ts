@@ -501,8 +501,26 @@ export function leadService(db: Database, settings: AuthSettings) {
         .select({ id: orders.id })
         .from(orders)
         .where(and(eq(orders.leadId, id), eq(orders.organizationId, lead.organizationId)));
+      const completedSteps = await db
+        .select({
+          stage: sql<number>`case when ${leadActivities.kind}='order-converted' then 6 else (${leadActivities.changes}->'stage-completed'->'after'->>'stage')::integer end`,
+          completedAt: leadActivities.createdAt,
+          employee: user.name,
+        })
+        .from(leadActivities)
+        .innerJoin(user, eq(user.id, leadActivities.actorId))
+        .where(
+          and(
+            eq(leadActivities.leadId, id),
+            eq(leadActivities.organizationId, lead.organizationId),
+            inArray(leadActivities.kind, ["stage-completed", "order-converted"]),
+          ),
+        )
+        .orderBy(desc(leadActivities.createdAt))
+        .limit(6);
       return {
         lead,
+        completedSteps,
         activities,
         activityTotal: activityTotal.total,
         followUps,
@@ -675,8 +693,11 @@ export function leadService(db: Database, settings: AuthSettings) {
             409,
             "Won order values and quantities are locked to the approved quotation",
           );
-        if (data.stage > old.stage + 1 && data.outcome !== "lost")
-          throw new AccessError(400, "Advance through the shared workflow one stage at a time");
+        if (data.stage !== old.stage && data.outcome !== "lost")
+          throw new AccessError(
+            400,
+            "Use Done on the current step; manual stage changes are not allowed",
+          );
         if (data.stage < old.stage)
           throw new AccessError(
             400,

@@ -16,6 +16,8 @@ import {
   utcInput,
 } from "@/features/leads/utils";
 import type { presalesService } from "@/lib/presales/service";
+import { StageCompletion } from "@/features/leads/stage-completion";
+import { preSalesStages } from "@/lib/domain/workflows";
 import { quotationSchema } from "@/lib/presales/validation";
 import { priceQuotation } from "@/lib/presales/pricing";
 type Workflow = Serialized<Awaited<ReturnType<ReturnType<typeof presalesService>["detail"]>>>;
@@ -205,6 +207,17 @@ export function PresalesWorkspace({
   ] as const;
   return (
     <div className="space-y-6">
+      {state.canWrite && (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-white p-4">
+          <div>
+            <p className="text-sm font-semibold">Current step: {preSalesStages[lead.stage - 1]}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Save the step details below, then mark Done to start the next step automatically.
+            </p>
+          </div>
+          <StageCompletion lead={lead} onCompleted={() => reload(1)} />
+        </section>
+      )}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link href={`/leads/${lead.id}`} className="text-xs font-semibold text-primary">

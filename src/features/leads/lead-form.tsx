@@ -553,25 +553,17 @@ export function LeadForm({
             <label htmlFor="lead-stage" className="text-xs font-medium">
               Pre-sales stage
             </label>
-            <select
-              id="lead-stage"
-              className={`${selectClass} mt-2`}
-              disabled={!lead || !!lead.outcome}
-              value={data.stage}
-              onChange={(e) =>
-                setData((prev) => ({
-                  ...prev,
-                  stage: Number(e.target.value),
-                  outcome: Number(e.target.value) === 7 ? "won" : "open",
-                }))
-              }
-            >
+            <select id="lead-stage" className={`${selectClass} mt-2`} disabled value={data.stage}>
               {preSalesStages.map((stage, i) => (
                 <option key={stage} value={i + 1} disabled={!!lead && i + 1 > lead.stage + 1}>
                   {i + 1}. {stage}
                 </option>
               ))}
             </select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Use Done on the current step to advance automatically. Won / Lost is recorded in Order
+              conversion.
+            </p>
           </div>
           <div>
             <label htmlFor="lead-outcome" className="text-xs font-medium">
@@ -580,15 +572,8 @@ export function LeadForm({
             <select
               id="lead-outcome"
               className={`${selectClass} mt-2`}
-              disabled={!lead || !!lead.outcome}
+              disabled
               value={data.outcome}
-              onChange={(e) =>
-                setData((prev) => ({
-                  ...prev,
-                  outcome: e.target.value as LeadInput["outcome"],
-                  stage: e.target.value === "open" ? Math.min(prev.stage, 6) : 7,
-                }))
-              }
             >
               <option value="open">Open</option>
               <option value="won">Won</option>

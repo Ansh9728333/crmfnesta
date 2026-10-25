@@ -1,3 +1,4 @@
+import { salesSteps } from "./complete-presales";
 import { aftercareService } from "../../src/lib/aftercare/service";
 // Disposable browser fixtures only. The Storage transport is injected here;
 // production never imports this module or falls back to a test object store.
@@ -59,18 +60,7 @@ export async function seedPostSalesBrowser(db: Database, settings: AuthSettings,
         siteAddress: "Isolated post-sales browser fixture address",
       }),
       lead = await leads.create(headers, input);
-    for (let stage = 2; stage <= 6; stage++) {
-      const detail = await leads.detail(headers, lead.id);
-      await leads.update(headers, lead.id, {
-        version: detail.lead.version,
-        data: {
-          ...input,
-          customerId: detail.lead.customerId,
-          projectId: detail.lead.projectId,
-          stage,
-        },
-      });
-    }
+    await salesSteps(db, settings, headers, lead.id).throughVisit();
     const quote = await presales.quotation(headers, lead.id, {
       expectedRevision: 0,
       items: [
@@ -89,6 +79,7 @@ export async function seedPostSalesBrowser(db: Database, settings: AuthSettings,
       decision: "accepted",
       evidence: "Isolated test acceptance",
     });
+    await salesSteps(db, settings, headers, lead.id).throughShowroom();
     const detail = await leads.detail(headers, lead.id),
       order = await presales.convert(headers, lead.id, {
         version: detail.lead.version,

@@ -572,3 +572,26 @@ browser cases pass. Two focused pre-sales browser cases additionally verify the
 selected-customer request returns HTTP 200. Release `45dc445` is live; read-only
 desktop/mobile checks confirm automatic options and scoped linked-name lookup.
 Production verification submitted no CRM forms and changed no customer records.
+
+## Phase 14 — Done-driven pre-sales progression
+
+Replace manual Move, stage selectors and drag/drop with Done on the current step.
+Transactional completion validates current stage/version and required appointment,
+measurement, quotation or showroom evidence, records immutable actor/time history,
+and starts only the next step. Saving evidence alone leaves the current step open.
+The existing quotation-backed Won conversion and reason-backed Lost closure remain
+the only final outcome paths. Explicit completions appear as Done in Lead details;
+historical earlier stages without completion evidence are not backfilled.
+
+Acceptance: test sequential completion, missing evidence, unauthorized access,
+double/stale submissions, persistence/reload, desktop/mobile focus and the full
+existing pre-sales/post-sales regression suite. No database migration is required.
+
+Validation: 49 unit and 70 isolated database cases pass. Lint, TypeScript and
+production builds pass; 10 public browser checks pass. The full authenticated
+run passed 16 cases; its two pre-sales cases exposed a case-sensitive Lost label
+assertion. After correcting that assertion, both desktop/mobile cases pass on
+rerun, including every Done transition, blocked incomplete work, five persisted
+Done records, Lost closure and customer/project persistence. Completion status is
+read from typed audited operations, never inferred from a free-text Done note.
+Final dialog keyboard-focus verification and production rollout follow.

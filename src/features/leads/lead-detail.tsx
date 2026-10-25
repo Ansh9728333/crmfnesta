@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
-  ArrowRight,
   CalendarClock,
   CheckCircle2,
   ExternalLink,
@@ -17,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { preSalesStages } from "@/lib/domain/workflows";
 import type { Directory, LeadDetail } from "./types";
-import { dateTime, leadInput, money, requestJson, selectClass, utcInput } from "./utils";
+import { dateTime, money, requestJson, utcInput } from "./utils";
+import { StageCompletion } from "./stage-completion";
 import { LeadForm } from "./lead-form";
 
 export function LeadDetailView({
@@ -33,16 +33,11 @@ export function LeadDetailView({
 }) {
   const [detail, setDetail] = useState(initial),
     [editing, setEditing] = useState(false),
-    [stageOpen, setStageOpen] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [activityPage, setActivityPage] = useState(1),
     [archiveOpen, setArchiveOpen] = useState(false);
   const lead = detail.lead;
-  const [stage, setStage] = useState(Math.min(lead.stage + 1, 7)),
-    [outcome, setOutcome] = useState<"open" | "won" | "lost">(lead.stage >= 6 ? "won" : "open"),
-    [lostReason, setLostReason] = useState(""),
-    [finalValue] = useState(lead.finalisedValue ?? "");
   async function reload(page = activityPage, followUpPage = detail.followUpPage) {
     setDetail(
       await requestJson<LeadDetail>(
@@ -116,17 +111,7 @@ export function LeadDetailView({
             </Button>
           )}
           {detail.canEdit && !lead.outcome && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setStage(Math.min(lead.stage + 1, 7));
-                setOutcome(lead.stage >= 6 ? "won" : "open");
-                setStageOpen(true);
-              }}
-            >
-              Update stage <ArrowRight size={14} />
-            </Button>
+            <StageCompletion lead={lead} onCompleted={() => reload()} />
           )}
         </div>
       </div>
@@ -153,6 +138,38 @@ export function LeadDetailView({
           ))}
         </div>
       </div>
+      <section className="rounded-xl border bg-white p-5" aria-label="Step completion status">
+        <h2 className="text-sm font-semibold">Step status</h2>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Only a recorded Done confirms completion. Save step details, then use Done to start the
+          next step.
+        </p>
+        <ol className="mt-4 space-y-3">
+          {preSalesStages.map((name, index) => {
+            const completed = detail.completedSteps.find((s) => s.stage === index + 1);
+            const status = completed
+              ? "Done"
+              : index + 1 === lead.stage
+                ? (lead.outcome ?? "Pending")
+                : index + 1 < lead.stage
+                  ? "Earlier step"
+                  : "Upcoming";
+            return (
+              <li key={name} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span>
+                  {index + 1}. {name}
+                  {completed && (
+                    <span className="mt-1 block text-muted-foreground">
+                      {completed.employee} · {dateTime(completed.completedAt)}
+                    </span>
+                  )}
+                </span>
+                <Badge variant={completed ? "secondary" : "outline"}>{status}</Badge>
+              </li>
+            );
+          })}
+        </ol>
+      </section>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map(([label, value]) => (
           <div className="rounded-xl border bg-white p-4" key={label}>
@@ -480,98 +497,6 @@ export function LeadDetailView({
               }}
             />
           )}
-        </DialogContent>
-      </Dialog>
-      <Dialog open={stageOpen} onOpenChange={setStageOpen}>
-        <DialogContent>
-          <DialogTitle>Update pre-sales stage</DialogTitle>
-          <DialogDescription>
-            Advance one stage at a time. Lost can be recorded at any point with a reason.
-          </DialogDescription>
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const data = {
-                ...leadInput(lead),
-                stage,
-                outcome: stage === 7 ? outcome : "open",
-                lossReason: lostReason,
-                finalisedValue: finalValue,
-              };
-              void run(`/api/leads/${lead.id}`, "PATCH", { version: lead.version, data }, () =>
-                setStageOpen(false),
-              );
-            }}
-          >
-            <label className="block text-xs">
-              Stage
-              <select
-                className={`${selectClass} mt-2`}
-                value={stage}
-                onChange={(e) => {
-                  setStage(Number(e.target.value));
-                  setOutcome(
-                    Number(e.target.value) === 7 ? (lead.stage < 6 ? "lost" : "won") : "open",
-                  );
-                }}
-              >
-                {preSalesStages.map((s, i) => (
-                  <option
-                    key={s}
-                    value={i + 1}
-                    disabled={i + 1 < lead.stage || (i + 1 > lead.stage + 1 && i + 1 !== 7)}
-                  >
-                    {i + 1}. {s}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {stage === 7 && (
-              <>
-                <label className="block text-xs">
-                  Outcome
-                  <select
-                    className={`${selectClass} mt-2`}
-                    value={outcome}
-                    onChange={(e) => setOutcome(e.target.value as "won" | "lost")}
-                  >
-                    <option value="won" disabled={lead.stage < 6}>
-                      Won
-                    </option>
-                    <option value="lost">Lost</option>
-                  </select>
-                </label>
-                {outcome === "lost" ? (
-                  <label className="block text-xs">
-                    Lost reason
-                    <Input
-                      className="mt-2"
-                      value={lostReason}
-                      onChange={(e) => setLostReason(e.target.value)}
-                      required
-                      minLength={3}
-                      maxLength={1000}
-                    />
-                  </label>
-                ) : (
-                  <Button asChild variant="outline">
-                    <Link href={`/leads/${lead.id}/presales?tab=conversion`}>
-                      Confirm quotation & convert to order
-                    </Link>
-                  </Button>
-                )}
-              </>
-            )}
-            {error && (
-              <p role="alert" className="text-xs text-destructive">
-                {error}
-              </p>
-            )}
-            <Button className="w-full" disabled={busy || (stage === 7 && outcome === "won")}>
-              Confirm stage change
-            </Button>
-          </form>
         </DialogContent>
       </Dialog>
       <Dialog open={archiveOpen} onOpenChange={setArchiveOpen}>

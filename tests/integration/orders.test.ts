@@ -1,3 +1,4 @@
+import { salesSteps } from "../support/complete-presales";
 import { managementService } from "../../src/lib/management/service";
 import { settingsService } from "../../src/lib/management/settings";
 import { notificationService } from "../../src/lib/management/notifications";
@@ -187,18 +188,7 @@ beforeAll(async () => {
         siteAddress: "Isolated integration site Bengaluru",
       }),
       lead = await leads.create(admin, input);
-    for (let number = 2; number <= 6; number++) {
-      const detail = await leads.detail(admin, lead.id);
-      await leads.update(admin, lead.id, {
-        version: detail.lead.version,
-        data: {
-          ...input,
-          customerId: detail.lead.customerId,
-          projectId: detail.lead.projectId,
-          stage: number,
-        },
-      });
-    }
+    await salesSteps(db, settings, admin, lead.id).throughVisit();
     const quote = await presales.quotation(admin, lead.id, {
       expectedRevision: 0,
       items: [
@@ -217,6 +207,7 @@ beforeAll(async () => {
       decision: "accepted",
       evidence: "Isolated customer acceptance",
     });
+    await salesSteps(db, settings, admin, lead.id).throughShowroom();
     const detail = await leads.detail(admin, lead.id);
     orderIds.push(
       (
@@ -1229,18 +1220,7 @@ describe("shared post-sales workflow", () => {
     };
     const fileRule = await config.save(admin, requirement),
       lead = await leads.create(admin, input);
-    for (let number = 2; number <= 6; number++) {
-      const d = await leads.detail(admin, lead.id);
-      await leads.update(admin, lead.id, {
-        version: d.lead.version,
-        data: {
-          ...input,
-          customerId: d.lead.customerId,
-          projectId: d.lead.projectId,
-          stage: number,
-        },
-      });
-    }
+    await salesSteps(db, settings, admin, lead.id).throughVisit();
     const quote = await presales.quotation(admin, lead.id, {
       expectedRevision: 0,
       items: [
@@ -1259,6 +1239,7 @@ describe("shared post-sales workflow", () => {
       decision: "accepted",
       evidence: "Customer accepted",
     });
+    await salesSteps(db, settings, admin, lead.id).throughShowroom();
     const d = await leads.detail(admin, lead.id),
       order = await presales.convert(admin, lead.id, {
         version: d.lead.version,

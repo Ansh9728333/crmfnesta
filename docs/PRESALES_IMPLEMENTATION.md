@@ -5,8 +5,8 @@
 - `/`: live, permission-scoped opportunity dashboard, company filter, pipeline
   value, open/won/lost totals, overdue follow-ups and recent leads.
 - `/leads`: common seven-stage Kanban and paginated table, Add Lead modal,
-  details drawer, drag/drop or keyboard-accessible Move action, advanced filters.
-- `/leads/[id]`: full lead details, Edit Lead, stage/outcome control, follow-up
+  details drawer, keyboard-accessible Done completion, advanced filters.
+- `/leads/[id]`: full lead details, Edit Lead, recorded Done status, follow-up
   scheduling/completion, paginated immutable timeline, notes and archive/restore.
 - `/customers`: paginated/searchable contacts, real customer creation and links
   to customer-specific projects/leads.
@@ -28,7 +28,9 @@ fields changes a lead snapshot, preserving other projects' shared master records
 ## Workflow and integrity
 
 All companies share the existing seven stages with their exact canonical names.
-New records start at Lead Generated; forward moves advance one stage at a time.
+New records start at Lead Generated; Done validates the current step's evidence and
+automatically starts the next step. Stage selection and drag/drop are disabled.
+Saved supporting records do not advance without Done; manual PATCH cannot bypass it.
 Lost may close an enquiry earlier, with a required reason. Won is available from
 Negotiation / Quotation Revision and creates one unique parent-linked order at
 post-sales stage 1. Retries/edits cannot duplicate the order. Closing cancels pending

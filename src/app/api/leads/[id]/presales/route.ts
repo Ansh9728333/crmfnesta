@@ -23,13 +23,22 @@ export async function POST(request: Request, { params }: Params) {
     assertOrigin(request);
     const { action, data } = z
         .object({
-          action: z.enum(["appointment", "quotation", "decision", "engagement", "convert"]),
+          action: z.enum([
+            "appointment",
+            "quotation",
+            "decision",
+            "engagement",
+            "convert",
+            "complete-stage",
+          ]),
           data: z.unknown(),
         })
         .parse(await jsonBody(request)),
       id = (await params).id,
       service = getPresalesService();
     switch (action) {
+      case "complete-stage":
+        return service.completeStage(request.headers, id, data);
       case "appointment":
         return service.appointment(request.headers, id, data);
       case "quotation":

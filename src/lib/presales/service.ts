@@ -49,6 +49,7 @@ import {
 } from "./validation";
 import { priceQuotation } from "./pricing";
 import { initializeOrderStages } from "../orders/initialize";
+import { preSalesStages } from "../domain/workflows";
 
 export interface FileStore {
   upload(path: string, bytes: Uint8Array, type: string): Promise<void>;
@@ -132,7 +133,7 @@ export function presalesService(db: Database, settings: AuthSettings) {
         actorId: a.user.id,
         fromStage: lead.stage,
         toStage: stage,
-        notes: "Pre-sales milestone recorded",
+        notes: `${preSalesStages[lead.stage - 1]} — Done`,
       });
     }
   }
@@ -146,6 +147,105 @@ export function presalesService(db: Database, settings: AuthSettings) {
     return q;
   }
   return {
+    async completeStage(headers: Headers, id: string, raw: unknown) {
+      const data = z
+        .object({
+          version: z.number().int().positive(),
+          stage: z.number().int().min(1).max(5),
+        })
+        .strict()
+        .parse(raw);
+      return mutate(headers, id, "leads.write", async (tx, a, lead) => {
+        if (lead.version !== data.version || lead.stage !== data.stage)
+          throw new AccessError(409, "This step changed. Reload before marking it Done.");
+        if (
+          lead.stage === 1 &&
+          (!lead.clientName ||
+            !lead.mobile ||
+            !lead.siteAddress ||
+            !lead.assignedTo ||
+            !lead.projectId)
+        )
+          throw new AccessError(
+            400,
+            "Complete the client, mobile, site, project and executive details before Done.",
+          );
+        if (lead.stage === 2 || lead.stage === 3) {
+          const visits = await tx
+            .select()
+            .from(appointments)
+            .where(
+              and(
+                eq(appointments.leadId, id),
+                eq(appointments.organizationId, lead.organizationId),
+                lead.stage === 2
+                  ? inArray(appointments.status, ["scheduled", "confirmed", "completed"])
+                  : eq(appointments.status, "completed"),
+              ),
+            );
+          if (lead.stage === 2 && !visits.length)
+            throw new AccessError(
+              400,
+              "Save a site visit appointment with its date and assigned employee before Done.",
+            );
+          if (lead.stage === 3 && !visits.some((v) => v.observations && v.measurements.length))
+            throw new AccessError(
+              400,
+              "Complete the site visit with observations and initial measurements before Done.",
+            );
+        }
+        if (lead.stage === 4) {
+          const quote = await latest(tx, id);
+          const [item] = quote
+            ? await tx
+                .select({ id: quotationItems.id })
+                .from(quotationItems)
+                .where(
+                  and(
+                    eq(quotationItems.quotationId, quote.id),
+                    eq(quotationItems.organizationId, lead.organizationId),
+                  ),
+                )
+                .limit(1)
+            : [];
+          if (!quote?.snapshot || !item)
+            throw new AccessError(
+              400,
+              "Issue an item-wise quotation before marking this step Done.",
+            );
+        }
+        if (lead.stage === 5) {
+          const [showroom] = await tx
+            .select({ id: salesEngagements.id })
+            .from(salesEngagements)
+            .where(
+              and(
+                eq(salesEngagements.leadId, id),
+                eq(salesEngagements.organizationId, lead.organizationId),
+                eq(salesEngagements.kind, "showroom"),
+              ),
+            )
+            .limit(1);
+          if (!showroom)
+            throw new AccessError(
+              400,
+              "Record the showroom outcome or Not Required with a reason before Done.",
+            );
+        }
+        const nextStage = lead.stage + 1;
+        await advance(tx, a, lead, nextStage);
+        await log(
+          tx,
+          a,
+          lead,
+          "stage-completed",
+          `${preSalesStages[lead.stage - 1]} — Done; next: ${preSalesStages[nextStage - 1]}`,
+          { stage: lead.stage, status: "pending" },
+          { stage: lead.stage, status: "done", nextStage },
+        );
+        return { id, stage: nextStage };
+      });
+    },
     async list(headers: Headers, kind: "appointments" | "quotations", raw: unknown = {}) {
       const filter = z
           .object({
@@ -468,8 +568,6 @@ export function presalesService(db: Database, settings: AuthSettings) {
             .where(eq(leads.id, id));
         }
         await log(tx, a, lead, "site-visit", `Site visit ${data.status}`, old ?? null, visit);
-        if (data.status === "completed" || ["scheduled", "confirmed"].includes(data.status))
-          await advance(tx, a, lead, data.status === "completed" ? 3 : 2);
         return { id: visit.id };
       });
     },
@@ -539,7 +637,6 @@ export function presalesService(db: Database, settings: AuthSettings) {
           previous ? { id: previous.id, revision: previous.revision } : null,
           { id: q.id, amount: q.amount },
         );
-        await advance(tx, a, lead, 4);
         return { id: q.id, revision: q.revision };
       });
     },
@@ -587,7 +684,6 @@ export function presalesService(db: Database, settings: AuthSettings) {
           null,
           record,
         );
-        await advance(tx, a, lead, data.kind === "showroom" ? 5 : 6);
         return { id: record.id };
       });
     },
@@ -704,7 +800,7 @@ export function presalesService(db: Database, settings: AuthSettings) {
             actorId: a.user.id,
             fromStage: 6,
             toStage: 7,
-            notes: `Won against quotation V${quote.revision}`,
+            notes: `${preSalesStages[5]} completed against V${quote.revision} — Done`,
           },
           {
             organizationId: lead.organizationId,

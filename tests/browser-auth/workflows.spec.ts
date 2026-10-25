@@ -32,11 +32,20 @@ test("records visits, immutable quotations, showroom, negotiation and Won/Lost c
   expect(response.ok()).toBe(true);
   const { id } = await response.json();
   await page.goto(`/leads/${id}/presales`);
+  async function done(next: string) {
+    await page.getByRole("button", { name: `Done ${fixture.clientName}`, exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Mark current step Done", exact: true });
+    await dialog.getByRole("button", { name: "Done · start next step", exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByText(`Current step: ${next}`, { exact: true })).toBeVisible();
+  }
+  await done("Site Visit Appointment");
   await page
     .getByLabel("Appointment date and time (IST)", { exact: true })
     .fill("2090-01-01T10:30");
   await page.getByRole("button", { name: "Schedule visit", exact: true }).click();
   await expect(page.getByRole("button", { name: "Edit appointment", exact: true })).toBeVisible();
+  await done("Site Visit and Initial Measurement");
   await page.getByRole("button", { name: "Edit appointment", exact: true }).click();
   await page.getByLabel("Visit status", { exact: true }).selectOption("completed");
   await page
@@ -47,6 +56,7 @@ test("records visits, immutable quotations, showroom, negotiation and Won/Lost c
   await page.getByLabel("Measurement 1 value", { exact: true }).fill("1500");
   await page.getByRole("button", { name: "Save appointment", exact: true }).click();
   await expect(page.getByText("1500 mm", { exact: true })).toBeVisible();
+  await done("Quotation Submitted");
   await page.getByRole("tab", { name: "Quotations", exact: true }).click();
   await page.getByLabel("Item 1 name", { exact: true }).fill("Premium window");
   await page.getByLabel("Item 1 description", { exact: true }).fill("Measured living-room window");
@@ -64,6 +74,7 @@ test("records visits, immutable quotations, showroom, negotiation and Won/Lost c
   const pdf = await context.request.get((await pdfLink.getAttribute("href"))!);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
   expect((await pdf.body()).subarray(0, 5).toString()).toBe("%PDF-");
+  await done("Customer Showroom Visit");
   await page.getByRole("button", { name: "Copy latest items", exact: true }).click();
   await page.getByLabel("Item 1 Quantity", { exact: true }).fill("3");
   await page.getByLabel("Item 1 Unit rate (INR)", { exact: true }).fill("1200");
@@ -96,6 +107,7 @@ test("records visits, immutable quotations, showroom, negotiation and Won/Lost c
     .fill("Samples reviewed and finishes confirmed");
   await page.getByRole("button", { name: "Record interaction", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Not Required", exact: true })).toBeVisible();
+  await done("Negotiation / Quotation Revision");
   await page.getByLabel("Interaction type", { exact: true }).selectOption("negotiation");
   await page.getByLabel("Interaction outcome", { exact: true }).fill("Final offer agreed");
   await page
