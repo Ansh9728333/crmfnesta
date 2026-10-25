@@ -197,3 +197,13 @@ the core's full hosted run also passed). Live desktop/mobile checks confirm remo
 controls, current-step dialog and keyboard focus, without submitting any CRM form.
 The small follow-up uses the workspace tab callback for Done navigation, preserving
 draft form state; both complete quotation/Won browser cases pass on desktop/mobile.
+
+Final application follow-up `ac72f15` is live as
+`dpl_4QuSsgv4uphXwajrZyHaKEuR1ieh`, unique deployment
+https://crmfnesta-ggi7e0cx9-bajrangs-projects-fe910f90.vercel.app.
+Final lint, TypeScript and production build pass. Both focused desktop/mobile
+workflow cases pass with Done opening conversion. Final live desktop/mobile
+checks also verify same-page step-details navigation, keyboard focus and locked
+stage editing; no real CRM forms were submitted or records changed.
+The follow-up hosted CI was still running at this verification:
+https://github.com/Ansh9728333/crmfnesta/actions/runs/40188479131.

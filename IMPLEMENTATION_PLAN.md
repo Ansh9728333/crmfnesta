@@ -601,3 +601,9 @@ The final same-page navigation callback opens step details or conversion without
 resetting existing form state. Both desktop/mobile quotation-to-Won browser cases
 pass again, including clicking Done to open conversion. Final follow-up rollout
 is recorded in docs/DEPLOYMENT_STATUS.md.
+
+Phase 14 complete: final application `ac72f15` is deployed at the existing domain.
+Final live desktop/mobile checks pass for step-details navigation, dialog/focus,
+Move/drag removal and disabled stage editing, with zero CRM form submissions.
+Core full hosted CI passed; the final UI follow-up has passing local checks and
+focused browser tests, with its separate hosted CI still running at verification.
